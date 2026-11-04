@@ -1,0 +1,17 @@
+.premio-card {
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.premio-card:hover {
+    transform: translateY(-2px);
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.premio-card.selected {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.15);
+}

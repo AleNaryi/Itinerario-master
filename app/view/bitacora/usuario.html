@@ -1,0 +1,293 @@
+{% include 'components/head.html' %}
+{% block extra_css %}{% endblock %}
+
+<div class="container-fluid px-4 py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('bitacora.dashboard') }}">Bitácora</a></li>
+            <li class="breadcrumb-item active">{{ usuario.nombre }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+        <select class="form-select w-auto"
+                onchange="if(this.value) window.location.href='/bitacora/usuario/'+this.value">
+            {% for u in usuarios %}
+            <option value="{{ u.id }}" {% if u.id == usuario.id %}selected{% endif %}>
+                {{ u.nombre }} ({{ u.email }})
+            </option>
+            {% endfor %}
+        </select>
+        <a href="{{ url_for('bitacora.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold"><i class="fas fa-user-circle me-2 text-primary"></i>{{ usuario.nombre }}</h5>
+                    <table class="table table-sm mb-0">
+                        <tr><td class="text-muted">Email</td><td class="fw-semibold">{{ usuario.email }}</td></tr>
+                        <tr><td class="text-muted">Rol</td><td><span class="badge bg-primary rounded-pill px-3 py-1">{{ usuario.rol }}</span></td></tr>
+                        <tr><td class="text-muted">Departamento</td><td>{{ usuario.departamento or '—' }}</td></tr>
+                        <tr><td class="text-muted">Cédula</td><td>{{ usuario.cedula or '—' }}</td></tr>
+                        <tr><td class="text-muted">Registro</td><td>{{ usuario.fecha_registro.strftime('%d/%m/%Y') if usuario.fecha_registro else '—' }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center text-center">
+                            <div class="fs-3 fw-bold text-primary">{{ total_sesiones }}</div>
+                            <div class="text-muted small">Sesiones</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center text-center">
+                            <div class="fs-3 fw-bold text-info">{{ total_actividades }}</div>
+                            <div class="text-muted small">Actividades</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center text-center">
+                            <div class="fs-3 fw-bold text-warning">{{ total_cambios }}</div>
+                            <div class="text-muted small">Cambios</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if sesion_activa %}
+            <div class="alert alert-success mt-2 mb-0 py-2 small">
+                <i class="fas fa-circle me-1 text-success"></i> Sesión activa desde {{ sesion_activa.inicio_sesion.strftime('%d/%m %H:%M') }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body px-4 py-3">
+            <form novalidate method="GET" class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label small fw-semibold mb-1">Desde</label>
+                    <input type="date" name="fecha_desde" class="form-control form-control-sm"
+                           value="{{ filtros.fecha_desde.strftime('%Y-%m-%d') if filtros.fecha_desde else '' }}">
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small fw-semibold mb-1">Hasta</label>
+                    <input type="date" name="fecha_hasta" class="form-control form-control-sm"
+                           value="{{ filtros.fecha_hasta.strftime('%Y-%m-%d') if filtros.fecha_hasta else '' }}">
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small fw-semibold mb-1">Módulo</label>
+                    <select name="modulo" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        {% for m in modulos_disponibles %}
+                        <option value="{{ m }}" {% if filtros.modulo == m %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small fw-semibold mb-1">Tipo</label>
+                    <select name="tipo_accion" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        {% for t in ['create', 'update', 'delete', 'login', 'logout'] %}
+                        <option value="{{ t }}" {% if filtros.tipo_accion == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm shadow-sm"><i class="fas fa-filter me-1"></i>Filtrar</button>
+                    <a href="{{ url_for('bitacora.reporte_usuario', usuario_id=usuario.id) }}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-2">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-clock me-1"></i>Tiempo por Módulo</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if tiempo_por_modulo %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Módulo</th>
+                                    <th class="text-center">Acciones</th>
+                                    <th class="text-end">Tiempo est.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in tiempo_por_modulo %}
+                                <tr>
+                                    <td><span class="badge bg-secondary rounded-pill px-3 py-1">{{ t.modulo }}</span></td>
+                                    <td class="text-center">{{ t.cantidad }}</td>
+                                    <td class="text-end small">
+                                        {% if t.tiempo_estimado > 3600 %}
+                                            {{ (t.tiempo_estimado // 3600)|int }}h {{ ((t.tiempo_estimado % 3600) // 60)|int }}m
+                                        {% elif t.tiempo_estimado > 60 %}
+                                            {{ (t.tiempo_estimado // 60)|int }}m {{ (t.tiempo_estimado % 60)|int }}s
+                                        {% else %}
+                                            {{ t.tiempo_estimado|int }}s
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">Sin actividad</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-2">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-history me-1"></i>Actividad Reciente ({{ total_actividades }})</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if actividades %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Acción</th>
+                                    <th>Módulo</th>
+                                    <th>Detalle</th>
+                                    <th>Página</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for a in actividades %}
+                                <tr>
+                                    <td class="small text-muted">{{ a.created_at.strftime('%d/%m %H:%M') if a.created_at else '—' }}</td>
+                                    <td>
+                                        <span class="badge rounded-pill px-3 py-1 {% if a.tipo_accion == 'create' %}bg-success
+                                                          {% elif a.tipo_accion == 'update' %}bg-info
+                                                          {% elif a.tipo_accion == 'delete' %}bg-danger
+                                                          {% elif a.tipo_accion == 'login' %}bg-primary
+                                                          {% else %}bg-secondary{% endif %}">
+                                            {{ a.accion or a.tipo_accion }}
+                                        </span>
+                                    </td>
+                                    <td><span class="badge bg-dark rounded-pill px-3 py-1">{{ a.modulo }}</span></td>
+                                    <td class="small">{{ a.detalle or '—' }}</td>
+                                    <td class="small text-muted">{{ a.pagina or '—' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">Sin actividad en este período</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-2">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-sign-in-alt me-1"></i>Sesiones ({{ total_sesiones }})</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if sesiones %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Inicio</th>
+                                    <th>Fin</th>
+                                    <th>Duración</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in sesiones %}
+                                <tr>
+                                    <td class="small">{{ s.inicio_sesion.strftime('%d/%m %H:%M') if s.inicio_sesion else '—' }}</td>
+                                    <td class="small">{{ s.fin_sesion.strftime('%d/%m %H:%M') if s.fin_sesion else 'Activa' }}</td>
+                                    <td class="small">
+                                        {% if s.duracion_segundos %}
+                                            {% if s.duracion_segundos > 3600 %}
+                                                {{ (s.duracion_segundos // 3600)|int }}h {{ ((s.duracion_segundos % 3600) // 60)|int }}m
+                                            {% elif s.duracion_segundos > 60 %}
+                                                {{ (s.duracion_segundos // 60)|int }}m {{ (s.duracion_segundos % 60)|int }}s
+                                            {% else %}
+                                                {{ s.duracion_segundos }}s
+                                            {% endif %}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ s.ip_address or '—' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">Sin sesiones registradas</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-2">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-exchange-alt me-1"></i>Cambios Realizados ({{ total_cambios }})</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if cambios %}
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tabla</th>
+                                    <th>Campo</th>
+                                    <th>Anterior</th>
+                                    <th>Nuevo</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in cambios %}
+                                <tr>
+                                    <td><span class="badge bg-secondary rounded-pill px-3 py-1">{{ c.tabla_afectada }}</span></td>
+                                    <td class="small">{{ c.campo }}</td>
+                                    <td class="small text-muted">{{ c.valor_anterior[:40] if c.valor_anterior else '—' }}</td>
+                                    <td class="small">{{ c.valor_nuevo[:40] if c.valor_nuevo else '—' }}</td>
+                                    <td class="small text-muted">{{ c.created_at.strftime('%d/%m %H:%M') if c.created_at else '—' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">Sin cambios registrados</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'components/footer.html' %}

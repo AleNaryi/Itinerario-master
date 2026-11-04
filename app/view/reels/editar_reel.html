@@ -1,0 +1,308 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i>Editar Reel</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form novalidate method="POST" id="reelForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-dark">Nombre del Reel <span class="text-danger">*</span></label>
+                            <input type="text" name="nombre" id="nombreReel" class="form-control" value="{{ reel.nombre }}" maxlength="50" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-dark">Duración total (min,seg) <span class="text-danger">*</span></label>
+                            <input type="text" name="duracion_total" id="duracionTotal" class="form-control" placeholder="ej: 2,30" value="{{ reel_duracion_texto }}" maxlength="10" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')" required>
+                            <small class="text-muted">Formato: minutos,segundos (ej: 2,30 → 2m 30s)</small>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <hr>
+                        <h6 class="fw-bold"><i class="fas fa-film me-1"></i>Videos del Reel</h6>
+                        <div id="videos-container"></div>
+                        <button type="button" id="agregarVideoBtn" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fas fa-plus me-1"></i>Agregar video
+                        </button>
+
+                        <hr>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{{ url_for('reels.dashboard') }}" class="btn btn-secondary px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm fw-bold">
+                                <i class="fas fa-save me-1"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2"></i>Videos del Reel</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped table-hover mb-0" id="tablaVideosBody">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nombre</th>
+                                    <th>Duración</th>
+                                    <th>Patrocinador</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="videos-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-secondary mt-3 mb-0">
+                        <small>Suma de duraciones: <strong id="sumaDuracion">0m 0s</strong> / Duración total: <strong id="duracionTotalMostrada">{{ reel_duracion_texto }}</strong></small>
+                    </div>
+                    <div id="advertencia" class="alert alert-danger mt-2" style="display:none;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> La suma de las duraciones de los videos supera la duración total del reel.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const videosIniciales = {{ videos_json|safe }};
+    const containerVideos = document.getElementById('videos-container');
+    const tbody = document.getElementById('videos-tbody');
+    const btnAgregar = document.getElementById('agregarVideoBtn');
+    const duracionTotalInput = document.getElementById('duracionTotal');
+    const sumaSpan = document.getElementById('sumaDuracion');
+    const duracionTotalMostrada = document.getElementById('duracionTotalMostrada');
+    const advertenciaDiv = document.getElementById('advertencia');
+    const reelForm = document.getElementById('reelForm');
+    const patrocinadores = {{ patrocinadores|tojson }};
+    let videos = [];
+
+    function mostrarError(campo, mensaje) {
+        campo.classList.add('is-invalid');
+        campo.classList.remove('is-valid');
+        var fb = campo.parentElement.querySelector('.invalid-feedback');
+        if (fb) fb.textContent = mensaje;
+    }
+
+    function mostrarValido(campo) {
+        campo.classList.remove('is-invalid');
+        campo.classList.add('is-valid');
+        var fb = campo.parentElement.querySelector('.invalid-feedback');
+        if (fb) fb.textContent = '';
+    }
+
+    function limpiarEstado(campo) {
+        campo.classList.remove('is-valid', 'is-invalid');
+        var fb = campo.parentElement.querySelector('.invalid-feedback');
+        if (fb) fb.textContent = '';
+    }
+
+    function parsearDuracion(texto) {
+        if (!texto || typeof texto !== 'string') return 0;
+        texto = texto.trim();
+        if (texto.includes(',')) {
+            const partes = texto.split(',');
+            const minutos = parseInt(partes[0]) || 0;
+            const segStr = (partes[1] || '').padEnd(2, '0').slice(0, 2);
+            const segundos = parseInt(segStr) || 0;
+            return minutos * 60 + segundos;
+        }
+        return (parseFloat(texto) || 0) * 60;
+    }
+
+    function segundosATexto(seg) {
+        const m = Math.floor(seg / 60);
+        const s = seg % 60;
+        if (s === 0) return `${m},0`;
+        return `${m},${s}`;
+    }
+
+    function formatearDuracion(segundos) {
+        const m = Math.floor(segundos / 60);
+        const s = segundos % 60;
+        if (m === 0) return `${s}s`;
+        if (s === 0) return `${m}m`;
+        return `${m}m ${s}s`;
+    }
+
+    function actualizarTablaYSuma() {
+        tbody.innerHTML = '';
+        if (videos.length === 0) {
+            tbody.innerHTML = '<tr class="text-muted"><td colspan="5" class="text-center">No hay videos agregados aún.</td></tr>';
+            sumaSpan.innerText = '0m 0s';
+            validarDuracion();
+            return;
+        }
+        let suma = 0;
+        videos.forEach((video, index) => {
+            suma += video.duracionSeg;
+            const fila = document.createElement('tr');
+            const p = video.patrocinador ? patrocinadores.find(x => x[0] === video.patrocinador) : null;
+            fila.innerHTML = `<td>${index+1}</td><td>${escapeHtml(video.nombre)}</td><td>${formatearDuracion(video.duracionSeg)}</td><td>${p ? escapeHtml(p[1]) : ''}</td><td><button type="button" class="btn btn-sm btn-outline-danger eliminar-video" data-index="${index}"><i class="fas fa-trash"></i></button></td>`;
+            tbody.appendChild(fila);
+        });
+        sumaSpan.innerText = formatearDuracion(suma);
+        validarDuracion();
+    }
+
+    function validarDuracion() {
+        const totalSeg = parsearDuracion(duracionTotalInput.value);
+        duracionTotalMostrada.innerText = totalSeg > 0 ? formatearDuracion(totalSeg) : '0m 0s';
+        const suma = videos.reduce((acc, v) => acc + v.duracionSeg, 0);
+        advertenciaDiv.style.display = (suma > totalSeg && totalSeg > 0) ? 'block' : 'none';
+    }
+
+    function agregarVideo(nombre, duracionTexto, patrocinador, div) {
+        var ok = true;
+        if (!nombre.trim()) {
+            if (div) mostrarError(div.querySelector('.temp-nombre'), 'El nombre del video es obligatorio');
+            ok = false;
+        } else if (div) { mostrarValido(div.querySelector('.temp-nombre')); }
+        if (!duracionTexto.trim()) {
+            if (div) mostrarError(div.querySelector('.temp-duracion'), 'La duración es obligatoria');
+            ok = false;
+        } else if (!/^\d{1,2}(,\d{1,2})?$/.test(duracionTexto.trim())) {
+            if (div) mostrarError(div.querySelector('.temp-duracion'), 'Formato: minutos,seg (ej: 2,30)');
+            ok = false;
+        } else if (parsearDuracion(duracionTexto) <= 0) {
+            if (div) mostrarError(div.querySelector('.temp-duracion'), 'Debe ser mayor a 0');
+            ok = false;
+        } else {
+            if (div) mostrarValido(div.querySelector('.temp-duracion'));
+        }
+        if (!ok) return false;
+        videos.push({ nombre: nombre.trim(), duracionSeg: parsearDuracion(duracionTexto), duracionTexto: duracionTexto, patrocinador: patrocinador ? parseInt(patrocinador) : null });
+        actualizarTablaYSuma();
+        return true;
+    }
+
+    function eliminarVideo(index) { videos.splice(index, 1); actualizarTablaYSuma(); }
+
+    document.getElementById('tablaVideosBody').addEventListener('click', (e) => {
+        const btn = e.target.closest('.eliminar-video');
+        if (btn) eliminarVideo(parseInt(btn.getAttribute('data-index')));
+    });
+
+    btnAgregar.addEventListener('click', () => {
+        const div = document.createElement('div');
+        div.className = 'video-input-group mb-2 p-2 border rounded';
+        const opts = patrocinadores.map(p => `<option value="${p[0]}">${escapeHtml(p[1])}</option>`).join('');
+        div.innerHTML = `<div class="row g-2 align-items-end">`
+            + `<div class="col-4"><label class="form-label small fw-bold">Nombre *</label><input type="text" class="form-control form-control-sm temp-nombre" placeholder="Nombre del video"><div class="invalid-feedback small"></div></div>`
+            + `<div class="col-3"><label class="form-label small fw-bold">Duración *</label><input type="text" class="form-control form-control-sm temp-duracion" placeholder="ej: 2,30"><div class="invalid-feedback small"></div></div>`
+            + `<div class="col-3"><label class="form-label small fw-bold">Patrocinador</label><select class="form-select form-select-sm temp-patrocinador"><option value="">Sin patrocinador</option>${opts}</select></div>`
+            + `<div class="col-2 d-flex gap-1"><button type="button" class="btn btn-sm btn-success agregar-temp-video"><i class="fas fa-check"></i></button><button type="button" class="btn btn-sm btn-secondary cancelar-temp-video"><i class="fas fa-times"></i></button></div></div>`;
+        containerVideos.appendChild(div);
+
+        var tempNombre = div.querySelector('.temp-nombre');
+        var tempDuracion = div.querySelector('.temp-duracion');
+        tempNombre.addEventListener('input', function() {
+            var v = this.value.trim();
+            if (!v) limpiarEstado(this); else if (v.length >= 2) mostrarValido(this); else mostrarError(this, 'Mínimo 2 caracteres');
+        });
+        tempDuracion.addEventListener('input', function() {
+            var v = this.value.trim();
+            if (!v) limpiarEstado(this);
+            else if (/^\d{1,2}(,\d{1,2})?$/.test(v)) mostrarValido(this);
+            else mostrarError(this, 'Solo números y coma (ej: 2,30)');
+        });
+
+        div.querySelector('.agregar-temp-video').addEventListener('click', () => {
+            if (agregarVideo(tempNombre.value, tempDuracion.value, div.querySelector('.temp-patrocinador').value, div)) div.remove();
+        });
+        div.querySelector('.cancelar-temp-video').addEventListener('click', () => div.remove());
+    });
+
+    reelForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        var nombre = document.querySelector('[name="nombre"]');
+        if (!nombre.value.trim()) {
+            mostrarError(nombre, 'El nombre del reel es obligatorio');
+            Swal.fire({ icon: 'warning', title: 'Nombre requerido', text: 'Ingresa el nombre del reel.' });
+            nombre.focus();
+            return;
+        }
+        mostrarValido(nombre);
+        if (!duracionTotalInput.value.trim()) {
+            mostrarError(duracionTotalInput, 'La duración es obligatoria');
+            Swal.fire({ icon: 'warning', title: 'Duración requerida', text: 'Ingresa la duración total del reel.' });
+            duracionTotalInput.focus();
+            return;
+        }
+        if (!/^\d{1,2}(,\d{1,2})?$/.test(duracionTotalInput.value.trim())) {
+            mostrarError(duracionTotalInput, 'Formato: minutos,seg (ej: 3,30 o 5)');
+            Swal.fire({ icon: 'warning', title: 'Duración inválida', text: 'Solo se permiten números y coma.' });
+            duracionTotalInput.focus();
+            return;
+        }
+        mostrarValido(duracionTotalInput);
+        if (videos.length === 0) { Swal.fire({ icon: 'warning', title: 'Sin videos', text: 'Debes agregar al menos un video.' }); return; }
+        var totalSeg = parsearDuracion(duracionTotalInput.value);
+        if (totalSeg <= 0) { Swal.fire({ icon: 'warning', title: 'Duración inválida', text: 'La duración total debe ser mayor a cero.' }); return; }
+        var suma = videos.reduce(function(acc, v) { return acc + v.duracionSeg; }, 0);
+        if (suma > totalSeg) { Swal.fire({ icon: 'warning', title: 'Excede duración', text: 'La suma de duraciones excede la duración total.' }); return; }
+        var confirm = await Swal.fire({
+            title: '¿Guardar cambios?',
+            text: 'Actualizar reel "' + nombre.value.trim() + '"',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d6efd',
+            confirmButtonText: 'Actualizar',
+            cancelButtonText: 'Cancelar'
+        });
+        if (!confirm.isConfirmed) return;
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden'; hidden.name = 'videos_json';
+        hidden.value = JSON.stringify(videos.map(function(v) { return { nombre: v.nombre, duracion: v.duracionSeg, patrocinador: v.patrocinador }; }));
+        reelForm.appendChild(hidden);
+        HTMLFormElement.prototype.submit.call(reelForm);
+    });
+
+    duracionTotalInput.addEventListener('input', function() {
+        validarDuracion();
+        var val = this.value.trim();
+        if (!val) limpiarEstado(this);
+        else if (/^\d{1,2}(,\d{1,2})?$/.test(val)) mostrarValido(this);
+        else mostrarError(this, 'Solo números y coma (ej: 3,30 o 5)');
+    });
+    duracionTotalInput.addEventListener('blur', function() {
+        var val = this.value.trim();
+        if (!val) mostrarError(this, 'La duración es obligatoria');
+        else if (/^\d{1,2}(,\d{1,2})?$/.test(val)) mostrarValido(this);
+        else mostrarError(this, 'Solo números y coma (ej: 3,30 o 5)');
+    });
+    var nombreInput = document.querySelector('[name="nombre"]');
+    nombreInput.addEventListener('input', function() {
+        var val = this.value.trim();
+        if (!val) limpiarEstado(this);
+        else if (val.length >= 2) mostrarValido(this);
+        else mostrarError(this, 'Mínimo 2 caracteres');
+    });
+    nombreInput.addEventListener('blur', function() {
+        var val = this.value.trim();
+        if (!val) mostrarError(this, 'El nombre es obligatorio');
+        else if (val.length >= 2) mostrarValido(this);
+        else mostrarError(this, 'Mínimo 2 caracteres');
+    });
+    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+    function cargarVideosIniciales() {
+        if (videosIniciales && videosIniciales.length) {
+            videos = videosIniciales.map(v => ({ nombre: v.nombre, duracionSeg: v.duracion, patrocinador: v.patrocinador }));
+            actualizarTablaYSuma();
+        }
+    }
+    cargarVideosIniciales();
+    validarDuracion();
+</script>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionReel.js') }}"></script>
+{% include 'components/footer.html' %}

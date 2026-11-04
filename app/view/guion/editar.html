@@ -1,0 +1,41 @@
+{% include 'components/head.html' %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">✏️ Editar Guión: {{ guion.nombre }}</h5>
+            </div>
+            <div class="card-body">
+                <form novalidate method="POST" id="guionForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="id" value="{{ guion.id }}">
+
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label fw-bold">Nombre del Guión</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ guion.nombre }}" required minlength="3" maxlength="50">
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tiempo_inning" class="form-label fw-bold">Tiempo por Inning</label>
+                        <div class="input-group">
+                            <span class="input-group-text">⏱️</span>
+                            <input type="text" class="form-control" id="tiempo_inning" name="tiempo_inning" maxlength="5" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9,]/g,'')"
+                                   value="{% if guion.tiempo_inning %}{% set dm = guion.tiempo_inning // 60 %}{% set ds = guion.tiempo_inning % 60 %}{{ dm }}{% if ds %},{{ ds }}{% endif %}{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i> Guardar Cambios</button>
+                        <a href="{{ url_for('guion.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionGuion.js') }}"></script>
+
+{% include 'components/footer.html' %}

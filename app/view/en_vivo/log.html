@@ -1,0 +1,64 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="h4 fw-bold mb-1">
+                <i class="fas fa-history me-2 text-info"></i>Bitácora
+            </h1>
+            <p class="text-muted mb-0 small">{{ guion.nombre }}</p>
+        </div>
+        <a href="{{ url_for('en_vivo.index') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+
+    <div class="btn-group mb-3" role="group">
+        <a href="{{ url_for('en_vivo.ver_log', guion_id=guion.id, filtro='todos') }}"
+           class="btn btn-sm {{ 'btn-primary' if filtro_activo == 'todos' else 'btn-outline-primary' }}">
+            Todos
+        </a>
+        <a href="{{ url_for('en_vivo.ver_log', guion_id=guion.id, filtro='acciones') }}"
+           class="btn btn-sm {{ 'btn-primary' if filtro_activo == 'acciones' else 'btn-outline-primary' }}">
+            Acciones
+        </a>
+        <a href="{{ url_for('en_vivo.ver_log', guion_id=guion.id, filtro='eventos') }}"
+           class="btn btn-sm {{ 'btn-primary' if filtro_activo == 'eventos' else 'btn-outline-primary' }}">
+            Eventos
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            {% if registros %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha / Hora</th>
+                            <th>Usuario</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in registros %}
+                        <tr>
+                            <td class="text-nowrap small">{{ r.fecha_formateada }}</td>
+                            <td>{{ r.usuario_nombre or '—' }}</td>
+                            <td class="small">{{ r.descripcion or '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                <p class="mb-0">No hay registros.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include 'components/footer.html' %}

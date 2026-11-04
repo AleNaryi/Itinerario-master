@@ -1,0 +1,134 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-edit me-2 text-primary"></i>Editar Elemento</h5>
+            </div>
+            <div class="card-body">
+                {% if guion.estado == 'en_vivo' %}
+                <div class="text-center py-4">
+                    <i class="fas fa-lock fa-3x mb-3 opacity-50"></i>
+                    <p class="fw-bold">Este guión está en vivo</p>
+                    <small class="text-muted">No se pueden editar elementos mientras está en vivo.</small>
+                    <div class="mt-3">
+                        <a href="{{ url_for('guion.agregar_elementos', id=guion.id) }}" class="btn btn-secondary btn-sm">Volver</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="mb-2">
+                    <strong>Guión:</strong> {{ guion.nombre }}
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Elemento actual:</small>
+                    {% if elemento.tipo == 'pregame' %}
+                        <span class="badge bg-warning">Pre-Game</span>
+                        {% set ts = elemento.hora.total_seconds() | int %}<strong>{{ '%02d:%02d' | format(ts // 3600, (ts % 3600) // 60) }}</strong>
+                    {% else %}
+                        <span class="badge bg-primary">Game</span>
+                        <strong>{{ elemento.inning }}° {{ elemento.medio_inning|capitalize }}</strong>
+                    {% endif %}
+                </div>
+
+                <form novalidate method="POST" id="elementoForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="tipoSelect" class="form-label fw-bold">Tipo</label>
+                        <select class="form-select form-select-sm" id="tipoSelect" name="tipo">
+                            <option value="pregame" {% if elemento.tipo == 'pregame' %}selected{% endif %}>Pre-Game</option>
+                            <option value="game" {% if elemento.tipo == 'game' %}selected{% endif %}>Game</option>
+                        </select>
+                    </div>
+
+                    <div id="pregameFields" {% if elemento.tipo == 'game' %}style="display:none;"{% endif %}>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">¿A qué hora?</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">🕐</span>
+                                <input type="time" class="form-control" id="horaInput" name="hora"
+                                       value="{% if elemento.hora %}{% set ts = elemento.hora.total_seconds() | int %}{{ '%02d:%02d' | format(ts // 3600, (ts % 3600) // 60) }}{% endif %}">
+                            </div>
+                            <small class="text-muted" id="horaWarning" style="display:none;">⚠️ Hora ya ocupada</small>
+                        </div>
+                    </div>
+
+                    <div id="gameFields" {% if elemento.tipo == 'pregame' %}style="display:none;"{% endif %}>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold">¿Inning?</label>
+                                <select class="form-select form-select-sm" id="inningSelect" name="inning">
+                                    <option value="">--</option>
+                                    {% for i in range(1, 10) %}
+                                    <option value="{{ i }}" {% if elemento.inning|string == i|string %}selected{% endif %}>{{ i }}{% if i == 1 %}ro{% elif i == 2 %}do{% elif i == 3 %}ro{% elif i == 4 %}to{% elif i == 5 %}to{% elif i == 6 %}to{% elif i == 7 %}mo{% elif i == 8 %}vo{% elif i == 9 %}no{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">¿Medio?</label>
+                                <select class="form-select form-select-sm" id="medioSelect" name="medio_inning">
+                                    <option value="">--</option>
+                                    <option value="alta" {% if elemento.medio_inning == 'alta' %}selected{% endif %}>Alta</option>
+                                    <option value="baja" {% if elemento.medio_inning == 'baja' %}selected{% endif %}>Baja</option>
+                                </select>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="inningWarning" style="display:none;">⚠️ Inning ya ocupado</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contenido" class="form-label fw-bold">Contenido</label>
+                        <textarea class="form-control form-control-sm" id="contenido" name="contenido" rows="2" maxlength="500">{{ elemento.contenido }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="duracion_estimada" class="form-label fw-bold">Duración estimada</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="duracion_estimada" name="duracion_estimada" maxlength="10" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')"
+                                   value="{% set dm = elemento.duracion_estimada // 60 %}{% set ds = elemento.duracion_estimada % 60 %}{{ dm }}{% if ds %},{{ ds }}{% endif %}">
+                            <span class="input-group-text">min,seg</span>
+                        </div>
+                        <small class="text-muted">Formato: minutos,segundos (ej: 2,30 → 2m 30s)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="encargado" class="form-label fw-bold">Encargado</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">👤</span>
+                            <select class="form-select form-select-sm" id="encargado" name="encargado">
+                                <option value="">-- Seleccionar --</option>
+                                {% for val, label in usuarios_choices %}
+                                <option value="{{ val }}" {% if elemento.encargado == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i> Guardar Cambios</button>
+                        <a href="{{ url_for('guion.agregar_elementos', id=guion.id) }}" class="btn btn-secondary btn-sm">Cancelar</a>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<style>
+.hora-ocupada, .inning-ocupado { background: #f8d7da; }
+#duracion_estimada[readonly] { background: #f0f0f0; cursor: not-allowed; }
+</style>
+<script>
+window.horasUsadas = {{ horas_usadas | list | tojson }};
+window.inningsUsados = {{ innings_usados | tojson }};
+window.guionId = {{ guion.id }};
+window.editingElementId = {{ elemento.id }};
+window.tiempoInning = {{ tiempo_inning if tiempo_inning else 'null' }};
+</script>
+<script type="module" src="{{ url_for('static', filename='js/GestionGuion.js') }}"></script>
+
+{% include 'components/footer.html' %}

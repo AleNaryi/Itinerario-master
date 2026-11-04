@@ -1,0 +1,36 @@
+/* CSS MANTENIMIENTO — solo estilos específicos del módulo */
+
+.historial-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.historial-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+.historial-item {
+    position: relative;
+    padding-bottom: 15px;
+}
+.historial-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #6c757d;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #6c757d;
+}
+.historial-item.nota::before { background: #ffc107; box-shadow: 0 0 0 2px #ffc107; }
+.historial-item.ingreso::before { background: #0d6efd; box-shadow: 0 0 0 2px #0d6efd; }
+.historial-item.reparar::before { background: #28a745; box-shadow: 0 0 0 2px #28a745; }
+.historial-item.baja::before { background: #6c757d; box-shadow: 0 0 0 2px #6c757d; }
+.historial-item.finalizar::before { background: #6c757d; box-shadow: 0 0 0 2px #6c757d; }

@@ -1,0 +1,380 @@
+{% include 'components/head.html' %}
+
+<style>
+.modulo-card {
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    padding: 18px 14px;
+    text-align: center;
+    user-select: none;
+}
+.modulo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.09);
+    border-color: #e2e8f0;
+}
+.modulo-card.active {
+    border-color: #2563eb;
+    background: #f0f4ff;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.12);
+}
+.modulo-card .modulo-icon {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    margin: 0 auto 8px;
+    transition: all 0.25s ease;
+}
+.modulo-card.active .modulo-icon {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+.modulo-card .modulo-nombre {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+.modulo-card .modulo-badge {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.filter-panel {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+}
+.filter-panel.open {
+    max-height: 600px;
+    opacity: 1;
+    margin-top: 12px;
+}
+.filter-panel-inner {
+    padding: 20px 24px;
+}
+.filter-group {
+    animation: fadeSlideIn 0.35s ease forwards;
+    opacity: 0;
+    transform: translateY(-6px);
+}
+.filter-group:nth-child(1) { animation-delay: 0.02s; }
+.filter-group:nth-child(2) { animation-delay: 0.06s; }
+.filter-group:nth-child(3) { animation-delay: 0.10s; }
+.filter-group:nth-child(4) { animation-delay: 0.14s; }
+.filter-group:nth-child(5) { animation-delay: 0.18s; }
+.filter-group:nth-child(6) { animation-delay: 0.22s; }
+@keyframes fadeSlideIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid #e2e8f0;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* =============================================
+   CONSTRUCTOR DE REPORTES — asistente por pasos
+   ============================================= */
+.wiz-steps {
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+.wiz-steps::-webkit-scrollbar { display: none; }
+.wiz-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    white-space: nowrap;
+    border-radius: 999px;
+    padding: 5px 12px 5px 6px;
+    font-size: .72rem; font-weight: 600;
+    color: #94a3b8;
+    background: #f1f5f9;
+    transition: background .2s ease, color .2s ease;
+}
+.wiz-chip .wiz-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .66rem;
+    background: #e2e8f0; color: #64748b;
+}
+.wiz-chip.active { background: #2563eb; color: #fff; }
+.wiz-chip.active .wiz-num { background: rgba(255,255,255,.22); color: #fff; }
+.wiz-chip.done { background: #ecfdf5; color: #059669; }
+.wiz-chip.done .wiz-num { background: #d1fae5; color: #059669; }
+
+.wiz-pregunta {
+    font-size: .95rem; font-weight: 700; color: #0f172a;
+    margin-bottom: 12px;
+}
+.wiz-opciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+.wiz-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.wiz-card:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 4px 16px rgba(37,99,235,.10);
+    transform: translateY(-2px);
+}
+.wiz-card.sel {
+    border-color: #2563eb;
+    background: #f0f4ff;
+    box-shadow: 0 0 0 1px #2563eb inset;
+}
+.wiz-card .wiz-icono {
+    width: 38px; height: 38px;
+    margin: 0 auto 8px;
+    border-radius: 10px;
+    background: #f1f5f9; color: #475569;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem;
+}
+.wiz-card.sel .wiz-icono { background: #2563eb; color: #fff; }
+.wiz-card .wiz-titulo { font-size: .8rem; font-weight: 600; color: #1e293b; line-height: 1.25; }
+.wiz-card .wiz-detalle { font-size: .66rem; color: #94a3b8; margin-top: 3px; }
+
+.wiz-fila-grano { margin-top: 12px; }
+.wiz-segmentos { display: inline-flex; background: #f1f5f9; border-radius: 10px; padding: 3px; gap: 2px; }
+.wiz-segmentos button {
+    border: none; background: transparent;
+    padding: 5px 14px; border-radius: 8px;
+    font-size: .74rem; font-weight: 600; color: #64748b;
+    cursor: pointer;
+}
+.wiz-segmentos button.on { background: #fff; color: #2563eb; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+.wiz-metrica-check .form-check-input:checked { background-color: #2563eb; border-color: #2563eb; }
+
+.wiz-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .wiz-card, .wiz-chip { transition: none; }
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.kpi-card-sm {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+}
+.kpi-card-sm .kpi-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.kpi-card-sm .kpi-label {
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+</style>
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                <i class="fas fa-file-pdf me-2 text-danger"></i>Reportes del Sistema
+            </h1>
+            <p class="text-muted mb-0">Genera reportes PDF detallados con análisis de cada módulo</p>
+        </div>
+    </div>
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="fas fa-cubes me-2 text-primary"></i>Selecciona un módulo</h5>
+            <button type="button" class="btn btn-sm btn-outline-primary fw-semibold" id="btnConstructor">
+                <i class="fas fa-wand-magic-sparkles me-1"></i>Constructor avanzado
+            </button>
+        </div>
+        <div class="card-body p-4" style="padding-top:12px !important;">
+            <div class="row g-3" id="moduloGrid">
+                {% for key, mod in modulos.items() %}
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="modulo-card" data-modulo="{{ key }}" data-nombre="{{ mod.nombre }}">
+                        <div class="modulo-icon" style="background: #f1f5f9; color: #64748b;">
+                            <i class="fas {{ mod.icono }}"></i>
+                        </div>
+                        <div class="modulo-nombre">{{ mod.nombre }}</div>
+                        <div class="modulo-badge"><i class="fas fa-file-pdf me-1"></i>Reporte</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# ── CONSTRUCTOR VISUAL (asistente por pasos) ── #}
+            <div class="card border mt-3 d-none" id="wizardCard"
+                 style="border-color:#e2e8f0; border-radius:14px; background:#fcfdff;">
+                <div class="card-header bg-transparent border-bottom py-3 px-3 px-md-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="fw-bold small text-primary">
+                            <i class="fas fa-wand-magic-sparkles me-1"></i>
+                            Constructor — <span id="wizModuloNombre">—</span>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted p-0"
+                                id="btnWizCerrar">
+                            <i class="fas fa-xmark me-1"></i>Salir
+                        </button>
+                    </div>
+                    <div class="wiz-steps mt-2" id="wizSteps"></div>
+                </div>
+                <div class="card-body px-3 px-md-4 py-4" id="wizBody"></div>
+                <div class="card-footer bg-white border-top py-3 px-3 px-md-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" id="btnWizAtras" disabled>
+                        <i class="fas fa-arrow-left me-1"></i>Atrás
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" id="btnWizNext" disabled>
+                        Siguiente<i class="fas fa-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-panel" id="filterPanel">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0" id="filterPanelTitle">
+                    <i class="fas fa-sliders-h me-2 text-primary"></i>
+                    Filtros — <span id="filterModuloNombre">—</span>
+                </h5>
+                <button type="button" class="btn btn-action btn-action-more" id="btnCerrarPanel" title="Cerrar" aria-label="Cerrar panel de filtros">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="filter-panel-inner" id="filterPanelBody">
+                <div class="text-center text-muted py-3">
+                    <span class="filter-spinner"></span> Cargando filtros...
+                </div>
+            </div>
+            <div class="card-footer bg-light border-0 px-4 py-3 d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-outline-secondary px-3" id="btnLimpiarFiltros">
+                    <i class="fas fa-eraser me-1"></i>Limpiar
+                </button>
+                <button type="button" class="btn btn-primary px-4 fw-bold" id="btnPreview" disabled>
+                    <i class="fas fa-eye me-1"></i>Vista Previa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" id="kpiPreviewCard" style="display:none;">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-chart-bar me-2 text-primary"></i>
+                Resumen — <span id="kpiModuloNombre">—</span>
+                <span class="badge bg-secondary rounded-pill ms-2" id="kpiTotalRegistros">0</span>
+            </h5>
+        </div>
+        <div class="card-body px-4 py-3">
+            <div class="kpi-grid" id="kpiGrid"></div>
+            <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                <table class="table table-sm table-hover table-striped mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr id="previewHead"></tr>
+                    </thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+            <div class="text-muted small mt-2" id="previewNote"></div>
+        </div>
+        <div class="card-footer bg-light border-0 px-4 py-3 d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-outline-secondary px-3" id="btnCerrarPreview">
+                <i class="fas fa-times me-1"></i>Cerrar
+            </button>
+            <button type="button" class="btn btn-danger px-4 fw-bold" id="btnDescargarPDF">
+                <i class="fas fa-file-pdf me-1"></i>Descargar PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-primary"></i>Reportes Generados</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tablaReportes">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Módulo</th>
+                            <th>Tipo de Reporte</th>
+                            <th>Tamaño</th>
+                            <th>Generado por</th>
+                            <th class="no-order">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reportes %}
+                        <tr>
+                            <td class="text-muted small">{{ r.creado_en.strftime('%d/%m/%Y %H:%M') if r.creado_en else '—' }}</td>
+                            <td><span class="badge bg-primary rounded-pill">{{ r.modulo }}</span></td>
+                            <td class="fw-semibold">{{ r.tipo_reporte }}</td>
+                            <td class="text-muted small">{{ '%.1f KB'|format(r.archivo_tamano / 1024) if r.archivo_tamano else '—' }}</td>
+                            <td>{{ r.usuario_nombre or '—' }}</td>
+                            <td>
+                                <div class="action-group">
+                                    <a href="/reportes/descargar/{{ r.archivo_ruta.split('/')[-1] }}" class="btn btn-action btn-action-primary" title="Descargar" aria-label="Descargar reporte">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-action btn-action-danger btn-eliminar-reporte" data-id="{{ r.id }}" title="Eliminar" aria-label="Eliminar reporte">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if not reportes %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-file-pdf fa-3x mb-3 opacity-25"></i>
+                <p class="mb-0">No hay reportes generados aún</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>window.COLUMNAS_PREVIEW = {{ columnas_preview | tojson }};</script>
+<script type="module" src="{{ url_for('static', filename='js/GestionReportes.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/ReportesConstructor.js') }}"></script>
+{% include 'components/footer.html' %}

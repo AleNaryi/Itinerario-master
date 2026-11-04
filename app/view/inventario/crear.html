@@ -1,0 +1,47 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="card border-0 shadow-sm" style="max-width: 700px; margin: 0 auto;">
+        <div class="card-header bg-dark text-white border-0 py-3 px-4">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-plus-circle me-2"></i>Crear Nuevo Recurso</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-dark">Nombre del recurso <span class="text-danger">*</span></label>
+                    <input type="text" name="nombre" class="form-control" maxlength="50" required placeholder="Ej. Proyector Epson EB-2055">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-dark">Descripci&oacute;n</label>
+                    <textarea name="descripcion" class="form-control" rows="3" maxlength="500" placeholder="Descripci&oacute;n opcional"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-dark">Tipo <span class="text-danger">*</span></label>
+                    <select name="tipo_id" class="form-select" required>
+                        <option value="" disabled selected>Seleccione un tipo</option>
+                        {% for tipo in tipos %}
+                        <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-dark">Fecha de compra</label>
+                        <input type="date" name="fecha_compra" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-dark">Costo</label>
+                        <input type="number" step="0.01" name="costo" class="form-control" maxlength="15" inputmode="decimal" oninput="this.value=this.value.replace(/[^0-9.,]/g,'')" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ url_for('inventario.dashboard') }}" class="btn btn-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-primary shadow-sm fw-bold px-4">Guardar Recurso</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% include 'components/footer.html' %}

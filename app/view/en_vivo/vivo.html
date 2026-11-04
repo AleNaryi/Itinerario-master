@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>EN VIVO - {{ guion.nombre }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        :root {
+            --bg: #08080e;
+            --bg-gradient: radial-gradient(ellipse at 50% 0%, #0d0d18 0%, #08080e 70%);
+            --bg-header: rgba(255,255,255,0.04);
+            --header-border: rgba(255,255,255,0.07);
+            --text: #f0f0f5;
+            --text-secondary: rgba(240,240,245,0.55);
+            --text-muted: rgba(240,240,245,0.28);
+            --card-bg: rgba(255,255,255,0.03);
+            --card-border: rgba(255,255,255,0.07);
+            --card-hover-bg: rgba(255,255,255,0.055);
+            --pill-bg: rgba(255,255,255,0.05);
+            --pill-border: rgba(255,255,255,0.09);
+            --pill-color: rgba(255,255,255,0.75);
+            --back-color: rgba(255,255,255,0.55);
+            --section-bg: rgba(255,255,255,0.03);
+            --section-border: rgba(255,255,255,0.06);
+            --header-title: #f0f0f5;
+            --header-meta: rgba(240,240,245,0.45);
+            --swal-bg: #12121a;
+            --swal-color: #f0f0f5;
+            --logo-pill-bg: rgba(10,10,16,0.85);
+            /* estados */
+            --curso-bg: rgba(16,185,129,0.10);
+            --curso-bg-hover: rgba(16,185,129,0.15);
+            --curso-border: rgba(52,211,153,0.45);
+            --curso-text: #6ee7b7;
+            --curso-time: #34d399;
+            --curso-glow: 0 0 26px rgba(16,185,129,0.14), inset 0 0 0 1px rgba(16,185,129,0.12);
+            --completado-text: rgba(240,240,245,0.45);
+            --completado-time: rgba(240,240,245,0.30);
+            --siguiente-accent: rgba(148,163,184,0.55);
+            --sobre-color: #fbbf24;
+            --ok: #34d399;
+            --warn: #fbbf24;
+            --danger: #ef4444;
+            /* conexión */
+            --conn-on: #34d399;
+            --conn-warn: #fbbf24;
+            --conn-off: #ef4444;
+        }
+
+        .light-theme {
+            --bg: #f6f4ef;
+            --bg-gradient: none;
+            --bg-header: #ffffff;
+            --header-border: #e2ded4;
+            --text: #1c2431;
+            --text-secondary: #5b564d;
+            --text-muted: #a8a29a;
+            --card-bg: #ffffff;
+            --card-border: #e2ded4;
+            --card-hover-bg: #faf8f4;
+            --pill-bg: #f1eee7;
+            --pill-border: #ddd8cc;
+            --pill-color: #57534a;
+            --back-color: #78716c;
+            --section-bg: #ffffff;
+            --section-border: #e7e3da;
+            --header-title: #1c2431;
+            --header-meta: #78716c;
+            --swal-bg: #ffffff;
+            --swal-color: #1c2431;
+            --logo-pill-bg: #14161d;
+            --curso-bg: rgba(5,150,105,0.09);
+            --curso-bg-hover: rgba(5,150,105,0.15);
+            --curso-border: rgba(5,150,105,0.45);
+            --curso-text: #047857;
+            --curso-time: #059669;
+            --curso-glow: none;
+            --completado-text: #78716c;
+            --completado-time: #a8a29a;
+            --siguiente-accent: #94a3b8;
+            --sobre-color: #b45309;
+            --ok: #047857;
+            --warn: #b45309;
+            --danger: #dc2626;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            background-image: var(--bg-gradient);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        [hidden] { display: none !important; }
+        button:focus-visible, a:focus-visible, .elemento:focus-visible, select:focus-visible {
+            outline: 2px solid var(--curso-time);
+            outline-offset: 2px;
+            border-radius: 8px;
+        }
+
+        /* ─── Header compacto de 3 filas ─────────────────────── */
+        .header-live {
+            background: var(--bg-header);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-bottom: 1px solid var(--header-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 10px 14px calc(10px + env(safe-area-inset-top)) 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        @media (min-width: 900px) {
+            .header-live {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 24px;
+                gap: 16px;
+            }
+        }
+        .h-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .h-row.row-actions { flex-wrap: wrap; gap: 8px; }
+
+        .logo-pill {
+            width: 32px; height: 32px;
+            background: var(--logo-pill-bg);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .logo-pill img { width: 22px; height: auto; display: block; }
+
+        .live-badge {
+            background: var(--danger);
+            color: white;
+            padding: 4px 13px;
+            border-radius: 20px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            animation: livePulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            flex-shrink: 0;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0.35); }
+            50% { opacity: 0.75; box-shadow: 0 0 0 7px rgba(239,68,68,0); }
+        }
+
+        .header-title-box { min-width: 0; flex: 1; }
+        .header-title-box h1 {
+            font-size: 1.02rem; margin: 0; line-height: 1.25;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            color: var(--header-title); font-weight: 800;
+        }
+        .fecha-info {
+            display: block; color: var(--header-meta);
+            font-size: 0.68rem; font-weight: 500;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        /* progreso global */
+        .progreso-box { flex: 1; min-width: 130px; max-width: 420px; }
+        .progreso-labels {
+            display: flex; justify-content: space-between;
+            font-size: 0.66rem; color: var(--header-meta); margin-bottom: 3px; font-weight: 600;
+        }
+        .progreso-track {
+            height: 6px; border-radius: 99px;
+            background: var(--pill-bg); border: 1px solid var(--pill-border);
+            overflow: hidden;
+        }
+        .progreso-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 99px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--pill-bg);
+            border: 1px solid var(--pill-border);
+            color: var(--pill-color);
+            padding: 3px 11px;
+            border-radius: 20px;
+            font-size: 0.68rem; font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--conn-on); }
+        .chip[data-estado="off"] .dot { background: var(--conn-off); }
+        .chip[data-estado="warn"] .dot { background: var(--conn-warn); animation: blink 1s infinite; }
+        .chip[data-estado="pend"] .dot { background: var(--conn-warn); }
+        @keyframes blink { 50% { opacity: 0.25; } }
+
+        .btn-mini {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--pill-bg);
+            border: 1px solid var(--pill-border);
+            color: var(--pill-color);
+            border-radius: 9px;
+            padding: 6px 13px;
+            font-size: 0.76rem; font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-mini:hover { background: var(--card-hover-bg); color: var(--text); }
+
+        .filtro-select {
+            background: var(--pill-bg);
+            border: 1px solid var(--pill-border);
+            color: var(--pill-color);
+            border-radius: 9px;
+            padding: 5px 9px;
+            font-size: 0.74rem; font-weight: 600;
+            max-width: 170px;
+            font-family: inherit;
+        }
+        .filtro-select option { background: var(--swal-bg); color: var(--swal-color); }
+
+        /* ─── Secciones ──────────────────────────────────────── */
+        .section-title {
+            padding: 10px 16px;
+            margin: 14px 14px 8px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: var(--section-bg);
+            border-radius: 10px;
+            border: 1px solid var(--section-border);
+        }
+        .section-title.pregame { border-left: 4px solid #f59e0b; color: #f59e0b; }
+        .section-title.game { border-left: 4px solid #06b6d4; color: #06b6d4; }
+        @media (min-width: 900px) {
+            .section-title { margin: 20px 24px 10px; }
+        }
+
+        .elementos-list {
+            padding: 0 14px 90px;
+            display: flex; flex-direction: column; gap: 7px;
+        }
+        @media (min-width: 900px) {
+            .elementos-list { padding: 0 24px 60px; max-width: 1100px; margin: 0 auto; width: 100%; gap: 8px; }
+        }
+
+        /* ─── Elementos ──────────────────────────────────────── */
+        .elemento {
+            display: grid;
+            grid-template-columns: 92px 1fr auto;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 14px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 52px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            border-left: 3px solid transparent;
+            position: relative;
+            cursor: default;
+        }
+        .elemento:not(.completado):not(.en_curso) { cursor: pointer; }
+        @media (min-width: 900px) {
+            .elemento {
+                grid-template-columns: 190px 1fr 110px 150px;
+                padding: 13px 18px;
+            }
+        }
+
+        .time-col { color: var(--text-secondary); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.2px; }
+        .contenido { font-size: 0.86rem; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+        .meta-col {
+            display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+            font-size: 0.68rem; color: var(--text-secondary); text-align: right;
+        }
+        .duracion-col { white-space: nowrap; }
+        .encargado-col { display: inline-flex; align-items: center; gap: 5px; }
+        .encargado-col i { opacity: 0.5; }
+        @media (min-width: 900px) {
+            .elemento .meta-col { flex-direction: row; align-items: center; gap: 14px; }
+        }
+
+        /* pendiente → siguiente marcado */
+        .elemento.siguiente { border-left-color: var(--siguiente-accent); }
+
+        /* EN CURSO = tarjeta hero */
+        .elemento.en_curso {
+            background: var(--curso-bg);
+            border-color: var(--curso-border);
+            border-left: 4px solid var(--curso-time);
+            box-shadow: var(--curso-glow);
+            padding: 16px 16px;
+            min-height: 84px;
+            cursor: pointer;
+        }
+        .elemento.en_curso .contenido { color: var(--curso-text); font-size: 1rem; font-weight: 800; }
+        .elemento.en_curso .time-col { color: var(--curso-time); }
+        .vivo-timer-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-variant-numeric: tabular-nums;
+            font-weight: 800;
+            color: var(--curso-time);
+            font-size: 0.95rem;
+        }
+        .vivo-timer-chip.sobretiempo { color: var(--sobre-color); }
+        .vivo-timer-bar {
+            height: 3px; border-radius: 99px; margin-top: 7px;
+            background: var(--pill-bg); overflow: hidden;
+        }
+        .vivo-timer-bar > div {
+            height: 100%; width: 0%;
+            background: var(--curso-time);
+            transition: width 1s linear;
+        }
+        .vivo-timer-bar.sobretiempo > div { background: var(--sobre-color); }
+        .hero-hint {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.62rem; letter-spacing: 0.4px; font-weight: 600;
+            color: var(--curso-time); text-transform: uppercase;
+            margin-top: 7px;
+            animation: hintPulse 2.4s ease-in-out infinite;
+        }
+        @keyframes hintPulse { 50% { opacity: 0.45; } }
+
+        /* COMPLETADO atenuado pero legible */
+        .elemento.completado { opacity: 0.62; border-left-color: transparent; }
+        .elemento.completado .contenido { color: var(--completado-text); font-weight: 500; }
+        .elemento.completado .time-col, .elemento.completado .meta-col { color: var(--completado-time); }
+        .elemento.completado .check-done { color: var(--ok); margin-right: 6px; }
+
+        /* reiniciado: coherente, punteado ámbar */
+        .elemento.reiniciado { border-left: 3px dashed var(--warn); }
+
+        /* filtro visual (NO altera secuencia ni estado) */
+        .elemento.oculto-por-filtro { display: none; }
+
+        .undo-btn {
+            cursor: pointer; opacity: 0.55;
+            transition: all 0.2s;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            background: none; border: none;
+            padding: 6px;
+            line-height: 1;
+            border-radius: 8px;
+        }
+        .undo-btn:hover { opacity: 1; color: var(--text); transform: scale(1.15); }
+
+        .toast-zone {
+            position: fixed;
+            bottom: calc(18px + env(safe-area-inset-bottom));
+            left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            z-index: 300;
+            pointer-events: none;
+            width: max-content; max-width: 92vw;
+        }
+
+        /* ─── Drawer de bitácora ─────────────────────────────── */
+        .log-drawer {
+            position: fixed; top: 0; right: 0;
+            height: 100vh; height: 100dvh;
+            width: min(440px, 100vw);
+            background: var(--bg);
+            border-left: 1px solid var(--header-border);
+            box-shadow: -14px 0 44px rgba(0,0,0,0.45);
+            transform: translateX(103%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 260;
+            display: flex; flex-direction: column;
+        }
+        .log-drawer.open { transform: translateX(0); }
+        .log-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s;
+            z-index: 255;
+        }
+        .log-overlay.open { opacity: 1; pointer-events: auto; }
+        .log-head {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--header-border);
+            background: var(--bg-header);
+            backdrop-filter: blur(20px);
+        }
+        .log-body {
+            overflow-y: auto; flex: 1;
+            padding: 14px 16px calc(24px + env(safe-area-inset-bottom));
+            font-size: 0.8rem;
+        }
+        /* adaptar la tabla del log al tema de la vista */
+        .log-body .card { background: var(--card-bg) !important; border-color: var(--card-border) !important; color: var(--text); }
+        .log-body table { color: var(--text); margin-bottom: 0; }
+        .log-body th { background: var(--pill-bg) !important; color: var(--text-secondary); border-color: var(--card-border) !important; }
+        .log-body td { border-color: var(--card-border) !important; }
+        .mini-toast {
+            background: var(--logo-pill-bg);
+            color: #f0f0f5;
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 10px;
+            padding: 7px 15px;
+            font-size: 0.74rem; font-weight: 600;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.35);
+            animation: toastIn 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .light-theme .mini-toast { border-color: rgba(28,36,49,0.18); color: #f0f0f5; }
+        .mini-toast.ok i { color: var(--ok); }
+        .mini-toast.info i { color: #67e8f9; }
+        .mini-toast.warn i { color: var(--warn); }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } }
+
+        .entrada-suave { animation: entradaSuave 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes entradaSuave { from { opacity: 0.3; transform: translateY(-4px); } }
+        .celebra {
+            animation: celebraPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes celebraPop { 40% { transform: scale(1.02); } }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001s !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+    </style>
+</head>
+<body data-puede-operar="{{ '1' if current_user.tiene_permiso('envivo.control') else '' }}"
+      data-mi-nombre="{{ current_user.nombre|tojson if false else current_user.nombre }}"
+      data-inicio-show="{{ inicio_show_ms or '' }}"
+      data-servidor-ahora="{{ servidor_ahora_ms }}">
+    <input type="hidden" id="csrfToken" value="{{ csrf_token() }}">
+    <header class="header-live">
+        <!-- Fila 1: volver · logo · nombre+fechas · EN VIVO -->
+        <div class="h-row">
+            <a href="/en-vivo/" class="btn-mini" aria-label="Volver a la lista"><i class="fas fa-arrow-left"></i></a>
+            <span class="logo-pill"><img src="{{ url_for('static', filename='img/Logo-blanco.png') }}" alt="Logo"></span>
+            <div class="header-title-box">
+                <h1>{{ guion.nombre }}</h1>
+                <small class="fecha-info">
+                    {% for f in fechas %}{{ f.fecha.strftime('%d/%m/%Y') }}{% if not loop.last %} / {% endif %}{% endfor %}
+                </small>
+            </div>
+            <span class="live-badge">● EN VIVO</span>
+        </div>
+
+        <!-- Fila 2: progreso · viendo · conexión -->
+        <div class="h-row row-actions">
+            <div class="progreso-box" aria-label="Progreso del show">
+                <div class="progreso-labels">
+                    <span>SHOW</span>
+                    <span><span id="countDone">0</span>/<span id="countTotal">0</span> · <span id="countPct">0%</span></span>
+                </div>
+                <div class="progreso-track"><div class="progreso-fill" id="progresoFill"></div></div>
+            </div>
+            <span class="chip" id="showClockChip" hidden title="Tiempo transcurrido del show"><i class="fas fa-stopwatch" style="opacity:.7;"></i><span id="showClockTxt">00:00</span></span>
+            <span class="chip" title="Espectadores conectados"><i class="fas fa-users" style="opacity:.6;"></i><span id="vivo-viewer-count">0</span></span>
+            <span class="chip" id="connChip" data-estado="on"><span class="dot"></span><span id="connTexto">CONECTADO</span></span>
+            <span class="chip" id="pendChip" data-estado="pend" hidden><i class="fas fa-cloud-upload-alt"></i>CAMBIOS PENDIENTES: <span id="pendCount">0</span></span>
+        </div>
+
+        <!-- Fila 3: filtro · log · tema · finalizar -->
+        <div class="h-row row-actions">
+            <select class="filtro-select" id="filtroEncargado" aria-label="Filtro visual por encargado">
+                <option value="">Todos los encargados</option>
+                <option value="__mis__">Mis eventos</option>
+            </select>
+            <button class="btn-mini" id="btnLog" aria-label="Ver bitácora del show" title="Bitácora"><i class="fas fa-history"></i></button>
+            <button class="btn-mini" id="themeToggle" aria-label="Cambiar tema" title="Cambiar tema"><i class="fas fa-moon"></i></button>
+            <button class="btn-mini" id="btnFinalizar" data-href="{{ url_for('en_vivo.finalizar', guion_id=guion.id) }}"><i class="fas fa-stop-circle me-1"></i> Finalizar</button>
+        </div>
+    </header>
+
+    <!-- Pre-Game -->
+    {% if pregame %}
+    <div class="section-title pregame"><i class="fas fa-clock me-2"></i>Pre-Game</div>
+    <div class="elementos-list" id="listaPregame">
+    {% for e in pregame %}
+    <div class="elemento {{ 'completado' if e.estado == 'completado' else 'reiniciado' if e.estado == 'reiniciado' else 'en_curso' if e.estado == 'en_curso' else '' }}"
+         data-id="{{ e.id }}" data-estado="{{ e.estado or 'pendiente' }}"
+         data-duracion="{{ e.duracion or 0 }}" data-inicio="{{ e.inicio_curso_ms or '' }}" data-encargado="{{ e.encargado or '' }}"
+         tabindex="0" role="button"
+         aria-label="{{ 'Elemento completado' if e.estado == 'completado' else 'Elemento actual, doble toque o Espacio para completar' if e.estado == 'en_curso' else 'Elemento pendiente' }}">
+        <div class="time-col">{{ e.hora }}</div>
+        <div class="contenido">{{ e.contenido }}</div>
+        <div class="meta-col">
+            <span class="duracion-col">{{ e.duracion // 60 }}m{% if e.duracion % 60 %} {{ e.duracion % 60 }}s{% endif %}</span>
+            <span class="encargado-col"><button class="undo-btn" onclick="retroceder(this)" title="Retroceder (marqué mal)" aria-label="Retroceder este elemento">↩</button><i class="fas fa-user-circle"></i> {{ e.encargado }}</span>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Game -->
+    {% if game %}
+    <div class="section-title game"><i class="fas fa-baseball-ball me-2"></i>Game</div>
+    <div class="elementos-list" id="listaGame">
+    {% for e in game %}
+    <div class="elemento {{ 'completado' if e.estado == 'completado' else 'reiniciado' if e.estado == 'reiniciado' else 'en_curso' if e.estado == 'en_curso' else '' }}"
+         data-id="{{ e.id }}" data-estado="{{ e.estado or 'pendiente' }}"
+         data-duracion="{{ e.duracion or 0 }}" data-inicio="{{ e.inicio_curso_ms or '' }}" data-encargado="{{ e.encargado or '' }}"
+         tabindex="0" role="button"
+         aria-label="{{ 'Elemento completado' if e.estado == 'completado' else 'Elemento actual, doble toque o Espacio para completar' if e.estado == 'en_curso' else 'Elemento pendiente' }}">
+        <div class="time-col">{{ e.hora }}</div>
+        <div class="contenido">{{ e.contenido }}</div>
+        <div class="meta-col">
+            <span class="duracion-col">{{ e.duracion // 60 }}m{% if e.duracion % 60 %} {{ e.duracion % 60 }}s{% endif %}</span>
+            <span class="encargado-col"><button class="undo-btn" onclick="retroceder(this)" title="Retroceder (marqué mal)" aria-label="Retroceder este elemento">↩</button><i class="fas fa-user-circle"></i> {{ e.encargado }}</span>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not pregame and not game %}
+    <div class="d-flex flex-column align-items-center justify-content-center py-5" style="color:var(--text-muted);">
+        <i class="fas fa-inbox fa-3x mb-3"></i>
+        <p>No hay elementos en este guion</p>
+    </div>
+    {% endif %}
+
+    <div class="toast-zone" id="toastZone" aria-live="polite"></div>
+
+    <!-- Drawer de bitácora (carga la página de log existente, sin backend nuevo) -->
+    <div class="log-overlay" id="logOverlay"></div>
+    <aside class="log-drawer" id="logDrawer" role="dialog" aria-modal="true" aria-label="Bitácora del show">
+        <div class="log-head">
+            <strong style="font-size:.85rem;"><i class="fas fa-history me-2"></i>Bitácora del show</strong>
+            <button class="undo-btn" id="logCerrar" aria-label="Cerrar bitácora" style="font-size:1.1rem;">✕</button>
+        </div>
+        <div class="log-body" id="logBody"><p style="color:var(--text-muted)">Cargando...</p></div>
+    </aside>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        // ─── Constantes ─────────────────────────────────────────
+        const guionId = {{ guion.id }};
+        const PUEDE_OPERAR = document.body.dataset.puedeOperar === '1';
+        const MI_NOMBRE = {{ current_user.nombre|tojson }};
+        const REDUCIR_MOVIMIENTO = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const elementosNodes = Array.from(document.querySelectorAll('.elemento'));
+        const estadoLocal = {};       // id -> estado (fuente de verdad de la UI)
+        const duraciones = {};        // id -> segundos estimados
+        const inicioCursoMs = {};     // id -> epoch ms (del SERVIDOR) cuando entró a en_curso
+        let cola = [];                // cambios pendientes de confirmar [{id, estado, accion}]
+        let flushTimer = null;
+        let conectado = true;
+        let currentEl = null;
+
+        // ─── Reloj de verdad del servidor ───────────────────────
+        // offset = servidor_ahora - cliente_ahora: todos los clientes computan
+        // el MISMO tiempo recorrido sin importar su reloj local ni cuándo entraron.
+        let offsetServidor = (parseInt(document.body.dataset.servidorAhora, 10) || Date.now()) - Date.now();
+        let inicioShowMs = parseInt(document.body.dataset.inicioShow, 10) || null;
+        const ahoraSync = () => Date.now() + offsetServidor;
+
+        const showChip = document.getElementById('showClockChip');
+        if (inicioShowMs) showChip.hidden = false;
+
+        elementosNodes.forEach(el => {
+            const id = el.dataset.id;
+            estadoLocal[id] = el.dataset.estado || 'pendiente';
+            duraciones[id] = parseInt(el.dataset.duracion, 10) || 0;
+            if (estadoLocal[id] === 'en_curso') {
+                inicioCursoMs[id] = parseInt(el.dataset.inicio, 10) || ahoraSync();
+            }
+        });
+
+        function nodo(id) {
+            return document.querySelector('.elemento[data-id="' + id + '"]');
+        }
+
+        // ÚNICA forma de mutar estado: actualiza mapa y DOM juntos
+        // (antes se mutaba solo dataset y el render desde estadoLocal revertía lo marcado)
+        function setEstado(el, nuevo) {
+            estadoLocal[el.dataset.id] = nuevo;
+            el.dataset.estado = nuevo;
+        }
+
+        // ─── Toasts (SweetAlert solo para finalizar/errores graves) ──
+        const toastZone = document.getElementById('toastZone');
+        function toast(tipo, icono, texto) {
+            const t = document.createElement('div');
+            t.className = 'mini-toast ' + tipo;
+            t.innerHTML = '<i class="fas ' + icono + '"></i>' + texto;
+            toastZone.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 2200);
+            setTimeout(() => t.remove(), 2600);
+            while (toastZone.children.length > 3) toastZone.firstChild.remove();
+        }
+        let ultimoAvisoRemoto = 0;
+
+        // ─── Tema ───────────────────────────────────────────────
+        const themeToggle = document.getElementById('themeToggle');
+        if (localStorage.getItem('vivo-theme') === 'light') {
+            document.body.classList.add('light-theme');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        themeToggle.addEventListener('click', () => {
+            const esLight = document.body.classList.toggle('light-theme');
+            themeToggle.innerHTML = '<i class="fas fa-' + (esLight ? 'sun' : 'moon') + '"></i>';
+            localStorage.setItem('vivo-theme', esLight ? 'light' : 'dark');
+        });
+
+        // ─── Conexión ───────────────────────────────────────────
+        const connChip = document.getElementById('connChip');
+        const connTexto = document.getElementById('connTexto');
+        function setConexion(estado, texto) {
+            connChip.dataset.estado = estado;
+            connTexto.textContent = texto;
+            conectado = estado === 'on';
+        }
+
+        // ─── Cola offline ───────────────────────────────────────
+        const pendChip = document.getElementById('pendChip');
+        const pendCount = document.getElementById('pendCount');
+        function refrescarColaUI() {
+            pendCount.textContent = cola.length;
+            pendChip.hidden = cola.length === 0;
+        }
+
+        function enviarEstados(cambiados) {
+            // estadoLocal ya fue actualizado por setEstado; consolidar cola por id
+            // (la ÚLTIMA accion de un id gana: refleja la intención final del operador)
+            cambiados.forEach(c => {
+                const id = c.el.dataset.id;
+                const existente = cola.find(x => x.id === id);
+                if (existente) { existente.accion = c.accion || existente.accion; }
+                else cola.push({ id, accion: c.accion || null });
+            });
+            cola.forEach(x => { x.estado = estadoLocal[x.id]; });
+            refrescarColaUI();
+            toast('info', 'fa-sync-alt', 'Sincronizando...');
+            programarFlush(0);
+        }
+
+        function programarFlush(ms) {
+            clearTimeout(flushTimer);
+            flushTimer = setTimeout(flush, ms);
+        }
+
+        function getCSRF() {
+            const el = document.getElementById('csrfToken');
+            return el ? el.value : '';
+        }
+
+        let ultimoToastErrorSync = 0;
+
+        function flush() {
+            if (!cola.length) return;
+            if (!conectado && !navigator.onLine) { programarFlush(4000); return; }
+            const estados = cola.map(x => ({ id: x.id, estado: x.estado, accion: x.accion }));
+            fetch('/en-vivo/api/sincronizar/' + guionId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
+                body: JSON.stringify({ estados: estados })
+            }).then(r => {
+                if (r.ok) {
+                    cola = [];
+                    refrescarColaUI();
+                    toast('ok', 'fa-check-circle', 'Guardado');
+                } else if (r.status === 401 || r.status === 403) {
+                    r.json().then(data => {
+                        Swal.fire('Sin permiso', data.error || 'No autorizado', 'error')
+                            .then(() => location.reload());
+                    }).catch(() => location.reload());
+                } else {
+                    // fallo HTTP real (ej. 400): NO es "sin conexión"; avisar y reintentar
+                    const ahora = Date.now();
+                    if (ahora - ultimoToastErrorSync > 6000) {
+                        toast('warn', 'fa-triangle-exclamation', 'Error al sincronizar (HTTP ' + r.status + ')');
+                        ultimoToastErrorSync = ahora;
+                    }
+                    programarFlush(4000);
+                }
+            }).catch(() => {
+                setConexion('off', 'SIN CONEXIÓN');
+                programarFlush(4000);
+            });
+        }
+
+        // ─── Cronómetro (UN único intervalo) ───────────────────
+        // UN único intervalo: cronómetro del elemento actual + reloj del show
+        function fmtReloj(seg) {
+            const s = Math.max(Math.floor(seg), 0);
+            const mm = String(Math.floor(s / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            const h = Math.floor(s / 3600);
+            return h > 0 ? h + ':' + mm + ':' + ss : mm + ':' + ss;
+        }
+        setInterval(() => {
+            if (inicioShowMs && !showChip.hidden) {
+                document.getElementById('showClockTxt').textContent = fmtReloj((ahoraSync() - inicioShowMs) / 1000);
+            }
+            if (!currentEl || currentEl.dataset.estado !== 'en_curso') return;
+            const chip = currentEl.querySelector('.vivo-timer-chip');
+            const barra = currentEl.querySelector('.vivo-timer-bar > div');
+            if (!chip) return;
+            const id = currentEl.dataset.id;
+            const transcurrido = Math.max((ahoraSync() - (inicioCursoMs[id] || ahoraSync())) / 1000, 0);
+            const estimado = duraciones[id];
+            if (transcurrido <= estimado) {
+                chip.textContent = fmtReloj(transcurrido);
+                chip.classList.remove('sobretiempo');
+                if (barra) {
+                    barra.parentElement.classList.remove('sobretiempo');
+                    barra.style.width = estimado ? Math.min(transcurrido / estimado * 100, 100) + '%' : '0%';
+                }
+            } else {
+                chip.textContent = '+' + fmtReloj(transcurrido - estimado) + ' SOBRETIEMPO';
+                chip.classList.add('sobretiempo');
+                if (barra) {
+                    barra.parentElement.classList.add('sobretiempo');
+                    barra.style.width = '100%';
+                }
+            }
+        }, 1000);
+
+        function montarHero(el) {
+            // agrega timer + hint SOLO a la tarjeta en curso (una vez)
+            if (el.querySelector('.vivo-timer-chip')) return;
+            const meta = el.querySelector('.contenido');
+            const wrap = document.createElement('div');
+            wrap.innerHTML =
+                '<div style="display:flex;align-items:center;gap:12px;margin-top:6px;">' +
+                  '<span class="vivo-timer-chip">00:00</span>' +
+                  (PUEDE_OPERAR ? '<span class="hero-hint"><i class="fas fa-hand-pointer"></i> doble toque para completar</span>' : '') +
+                '</div>' +
+                '<div class="vivo-timer-bar"><div></div></div>';
+            meta.appendChild(wrap);
+        }
+
+        function desmontarHero(el) {
+            const wrap = el && el.querySelector('.vivo-timer-chip');
+            if (wrap) wrap.closest('div[style]').remove();
+        }
+
+        // ─── Render de estados (parcial, sin reconstruir lista) ──
+        function actualizarVista({ scroll = false } = {}) {
+            let prevCurrent = currentEl;
+            currentEl = null;
+            let done = 0;
+            const total = elementosNodes.length;
+
+            elementosNodes.forEach(el => {
+                const st = estadoLocal[el.dataset.id];
+                el.dataset.estado = st;
+                el.classList.remove('en_curso', 'completado', 'reiniciado', 'siguiente');
+                el.setAttribute('aria-label',
+                    st === 'completado' ? 'Elemento completado' :
+                    st === 'en_curso' ? 'Elemento actual, doble toque o Espacio para completar' :
+                    'Elemento pendiente');
+                if (st === 'completado') {
+                    el.classList.add('completado');
+                    if (!el.querySelector('.check-done')) {
+                        const c = document.createElement('i');
+                        c.className = 'fas fa-check-circle check-done';
+                        el.querySelector('.contenido').prepend(c);
+                    }
+                    done++;
+                } else if (st === 'en_curso') {
+                    el.classList.add('en_curso');
+                    currentEl = el;
+                    montarHero(el);
+                } else if (st === 'reiniciado') {
+                    el.classList.add('reiniciado');
+                }
+            });
+
+            // marca el siguiente pendiente tras el actual
+            if (currentEl) {
+                const idx = elementosNodes.indexOf(currentEl);
+                for (let i = idx + 1; i < total; i++) {
+                    if (estadoLocal[elementosNodes[i].dataset.id] === 'pendiente') {
+                        elementosNodes[i].classList.add('siguiente');
+                        break;
+                    }
+                }
+            }
+            if (prevCurrent && prevCurrent !== currentEl) desmontarHero(prevCurrent);
+
+            // contadores + progreso (siempre sobre el TOTAL real)
+            document.getElementById('countDone').textContent = done;
+            document.getElementById('countTotal').textContent = total;
+            const pct = total ? Math.round(done * 100 / total) : 0;
+            document.getElementById('countPct').textContent = pct + '%';
+            document.getElementById('progresoFill').style.width = pct + '%';
+
+            if (pct === 100 && prevCurrent !== null) {
+                document.querySelector('.header-live').classList.add('celebra');
+                toast('ok', 'fa-star', 'Show completado');
+                setTimeout(() => document.querySelector('.header-live').classList.remove('celebra'), 700);
+            }
+
+            aplicarFiltroEncargado();
+
+            if (scroll && currentEl && currentEl !== prevCurrent && !REDUCIR_MOVIMIENTO) {
+                currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (scroll && currentEl) {
+                currentEl.scrollIntoView({ block: 'center' });
+            }
+        }
+
+        function aplicarEstadosRemotos(estados, origenRemoto, servidorAhora) {
+            if (servidorAhora) offsetServidor = parseInt(servidorAhora, 10) - Date.now();
+            let cambioActual = false;
+            estados.forEach(s => {
+                const el = nodo(s.id);
+                if (!el) return;
+                if (origenRemoto && estadoLocal[s.id] !== s.estado && !cola.some(x => String(x.id) === String(s.id))) {
+                    const ahora = Date.now();
+                    if (ahora - ultimoAvisoRemoto > 6000) {
+                        toast('info', 'fa-users', 'Otro operador actualizó el guion');
+                        ultimoAvisoRemoto = ahora;
+                    }
+                }
+                const eraCurso = estadoLocal[s.id] === 'en_curso';
+                estadoLocal[s.id] = s.estado;
+                if (s.estado === 'en_curso') {
+                    // reloj de verdad: timestamp del SERVIDOR; fallback optimista si aún no llega
+                    inicioCursoMs[s.id] = s.inicio_curso ? parseInt(s.inicio_curso, 10) : ahoraSync();
+                    cambioActual = true;
+                }
+                if (eraCurso && s.estado !== 'en_curso') delete inicioCursoMs[s.id];
+            });
+            actualizarVista({ scroll: cambioActual });
+        }
+
+        // ─── Interacción principal: doble toque / doble clic ────
+        function completarYAvanzar(el) {
+            if (!PUEDE_OPERAR) return;
+            if (el.dataset.estado !== 'en_curso') return;
+            el.classList.add('entrada-suave');
+            setTimeout(() => el.classList.remove('entrada-suave'), 400);
+
+            const cambiados = [];
+            setEstado(el, 'completado');
+            delete inicioCursoMs[el.dataset.id];
+            cambiados.push({ el: el, accion: 'completar' });
+            for (const item of elementosNodes) {
+                if (item === el) continue;
+                if (estadoLocal[item.dataset.id] === 'pendiente') {
+                    setEstado(item, 'en_curso');
+                    inicioCursoMs[item.dataset.id] = ahoraSync();
+                    cambiados.push({ el: item });   // avance automático: sin accion propia
+                    break;
+                }
+            }
+            actualizarVista({ scroll: true });
+            enviarEstados(cambiados);
+        }
+
+        function retroceder(btn) {
+            // Semántica: "marqué mal y aún lo debo ejecutar". Invariante duro:
+            // EXACTAMENTE UN elemento en_curso (o cero, caso borde recuperable con el caso C).
+            if (!PUEDE_OPERAR) return;
+            const el = btn.closest('.elemento');
+            const estado = el.dataset.estado;
+            const cambiados = [];
+            const idx = elementosNodes.indexOf(el);
+            const esPendiente = s => s === 'pendiente' || s === 'reiniciado';
+
+            // CASO A: ↩ sobre el ACTUAL -> "esto aún no va"; reactiva el completado más cercano atrás
+            if (estado === 'en_curso') {
+                setEstado(el, 'pendiente');
+                delete inicioCursoMs[el.dataset.id];
+                cambiados.push({ el, accion: 'reiniciar' });
+                for (let i = idx - 1; i >= 0; i--) {
+                    if (estadoLocal[elementosNodes[i].dataset.id] === 'completado') {
+                        setEstado(elementosNodes[i], 'en_curso');
+                        inicioCursoMs[elementosNodes[i].dataset.id] = ahoraSync();
+                        cambiados.push({ el: elementosNodes[i], accion: 'reiniciar' });
+                        break;
+                    }
+                }
+
+            // CASO B: ↩ sobre un COMPLETADO -> cascada: todo lo posterior cae a pendiente
+            } else if (estado === 'completado') {
+                setEstado(el, 'en_curso');
+                inicioCursoMs[el.dataset.id] = ahoraSync();
+                cambiados.push({ el, accion: 'reiniciar' });
+                for (let i = idx + 1; i < elementosNodes.length; i++) {
+                    const st = estadoLocal[elementosNodes[i].dataset.id];
+                    if (st === 'en_curso' || st === 'completado') {
+                        setEstado(elementosNodes[i], 'pendiente');
+                        delete inicioCursoMs[elementosNodes[i].dataset.id];
+                        cambiados.push({ el: elementosNodes[i], accion: 'reiniciar' });
+                    } else {
+                        break;   // primer pendiente posterior: fin de la zona afectada
+                    }
+                }
+
+            // CASO C: ↩ sobre PENDIENTE -> no-op normal; SOLO si cero activos (show congelado)
+            } else if (esPendiente(estado)) {
+                const hayActivo = elementosNodes.some(n => estadoLocal[n.dataset.id] === 'en_curso');
+                if (hayActivo) return;
+                setEstado(el, 'en_curso');
+                inicioCursoMs[el.dataset.id] = ahoraSync();
+                cambiados.push({ el, accion: 'reiniciar' });
+            } else {
+                return;
+            }
+
+            actualizarVista();
+            enviarEstados(cambiados);
+        }
+        window.retroceder = retroceder;
+
+        // doble clic desktop + Enter/accesible + doble tap móvil con debounce
+        elementosNodes.forEach(el => {
+            el.addEventListener('dblclick', function (e) {
+                if (e.target.closest('.undo-btn')) return;
+                completarYAvanzar(this);
+            });
+            el.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && this.dataset.estado === 'en_curso') {
+                    e.preventDefault();
+                    completarYAvanzar(this);
+                }
+            });
+        });
+
+        let lastTapTime = 0, lastTapTarget = null;
+        document.addEventListener('touchstart', function (e) {
+            if (e.target.closest('.undo-btn')) return;
+            if (e.touches.length > 1) return;
+            const target = e.target.closest('.elemento');
+            if (!target || target.dataset.estado !== 'en_curso') return;
+            const now = Date.now();
+            if (lastTapTarget === target && now - lastTapTime < 320) {
+                e.preventDefault();
+                completarYAvanzar(target);
+                lastTapTime = 0; lastTapTarget = null;
+            } else {
+                lastTapTime = now; lastTapTarget = target;
+            }
+        }, { passive: false });
+
+        // atajos de teclado (solo quien puede operar)
+        document.addEventListener('keydown', function (e) {
+            if (!PUEDE_OPERAR) return;
+            if (e.target.matches('input, textarea, select')) return;
+            if (e.key === ' ' && currentEl) { e.preventDefault(); completarYAvanzar(currentEl); }
+            if ((e.key === 'r' || e.key === 'R') && currentEl) retroceder(currentEl.querySelector('.undo-btn') || currentEl);
+        });
+
+        // ─── Filtro visual por encargado ────────────────────────
+        const filtroSel = document.getElementById('filtroEncargado');
+        (function poblarFiltro() {
+            const unicos = [...new Set(elementosNodes.map(el => el.dataset.encargado).filter(Boolean))];
+            unicos.sort().forEach(nombre => {
+                const op = document.createElement('option');
+                op.value = nombre; op.textContent = nombre;
+                filtroSel.appendChild(op);
+            });
+        })();
+        function aplicarFiltroEncargado() {
+            const val = filtroSel.value;
+            elementosNodes.forEach(el => {
+                let visible = true;
+                if (val === '__mis__') visible = el.dataset.encargado === MI_NOMBRE;
+                else if (val) visible = el.dataset.encargado === val;
+                el.classList.toggle('oculto-por-filtro', !visible);
+            });
+        }
+        filtroSel.addEventListener('change', aplicarFiltroEncargado);
+
+        // ─── Finalizar con conteo real ──────────────────────────
+        document.getElementById('btnFinalizar').addEventListener('click', function () {
+            const href = this.dataset.href;
+            const esLight = document.body.classList.contains('light-theme');
+            const total = elementosNodes.length;
+            const done = elementosNodes.filter(el => estadoLocal[el.dataset.id] === 'completado').length;
+            Swal.fire({
+                title: '¿Finalizar guion?',
+                html: '<div style="font-size:.95rem;line-height:1.7">' +
+                      '<b>Completados:</b> ' + done + ' &nbsp;·&nbsp; <b>Pendientes:</b> ' + (total - done) +
+                      '<br><small>Esta acción finalizará el show actual.</small></div>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: esLight ? '#78716c' : 'rgba(255,255,255,0.2)',
+                confirmButtonText: 'Sí, finalizar',
+                cancelButtonText: 'Cancelar',
+                background: esLight ? '#fff' : '#12121a',
+                color: esLight ? '#1c2431' : '#f0f0f5',
+                backdrop: 'rgba(0,0,0,0.8)'
+            }).then(res => { if (res.isConfirmed) window.location.href = href; });
+        });
+
+        // ─── SocketIO ───────────────────────────────────────────
+        const socket = io();
+
+        function registrarUsuario() {
+            socket.emit('registrar_usuario', {
+                user_id: {{ current_user.id }},
+                nombre: {{ current_user.nombre|tojson }},
+                pagina: window.location.pathname,
+                en_vivo_id: guionId
+            });
+        }
+
+        function sincronizarEstado() {
+            fetch('/en-vivo/api/estado-actual/' + guionId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.estados) aplicarEstadosRemotos(data.estados, false, data.servidor_ahora);
+                })
+                .catch(() => {});
+        }
+
+        socket.on('connect', () => {
+            setConexion('on', 'CONECTADO');
+            registrarUsuario();
+            if (cola.length) programarFlush(400);
+            sincronizarEstado();   // reconciliar SIEMPRE al conectar (primera vez o reconexión)
+        });
+        socket.on('disconnect', () => setConexion('off', 'SIN CONEXIÓN'));
+        socket.io.on('reconnect_attempt', () => setConexion('warn', 'RECONECTANDO...'));
+
+        socket.on('usuarios_actualizados', function (data) {
+            const enVivo = data.usuarios.filter(u => u.en_vivo_id === guionId);
+            document.getElementById('vivo-viewer-count').textContent = enVivo.length;
+        });
+
+        socket.on('actualizar_estados', function (data) {
+            if (data.guion_id === guionId) aplicarEstadosRemotos(data.estados, true, data.servidor_ahora);
+        });
+
+        window.addEventListener('online', () => { programarFlush(200); });
+        window.addEventListener('offline', () => setConexion('off', 'SIN CONEXIÓN'));
+
+        // ─── Drawer de bitácora ──────────────────────────────
+        const logDrawer = document.getElementById('logDrawer');
+        const logOverlay = document.getElementById('logOverlay');
+        const logBody = document.getElementById('logBody');
+
+        function cargarLogUrl(url) {
+            logBody.innerHTML = '<p style="color:var(--text-muted)">Cargando...</p>';
+            fetch(url)
+                .then(r => r.ok ? r.text() : Promise.reject())
+                .then(html => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const cont = doc.querySelector('.container-fluid');
+                    if (!cont) throw new Error('sin contenido');
+                    // quitar el encabezado de página (título/volver); conservar filtros
+                    const cabecera = cont.querySelector(':scope > .d-flex.align-items-center.justify-content-between');
+                    if (cabecera) cabecera.remove();
+                    logBody.innerHTML = '';
+                    while (cont.firstChild) logBody.appendChild(cont.firstChild);
+                })
+                .catch(() => {
+                    logBody.innerHTML = '<p style="color:var(--text-muted)">No se pudo cargar la bitácora. <a href="#" id="logReintentar">Reintentar</a></p>';
+                    const re = document.getElementById('logReintentar');
+                    if (re) re.addEventListener('click', e => { e.preventDefault(); cargarLogUrl('/en-vivo/log/' + guionId); });
+                });
+        }
+
+        function abrirLog() {
+            logDrawer.classList.add('open');
+            logOverlay.classList.add('open');
+            cargarLogUrl('/en-vivo/log/' + guionId);
+        }
+        function cerrarLog() {
+            logDrawer.classList.remove('open');
+            logOverlay.classList.remove('open');
+        }
+        document.getElementById('btnLog').addEventListener('click', abrirLog);
+        document.getElementById('logCerrar').addEventListener('click', cerrarLog);
+        logOverlay.addEventListener('click', cerrarLog);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarLog(); });
+        // los filtros del log son links: navegan DENTRO del drawer, nunca fuera
+        logBody.addEventListener('click', e => {
+            const a = e.target.closest('a[href]');
+            if (!a || !a.getAttribute('href').startsWith('/en-vivo/log/')) return;
+            e.preventDefault();
+            cargarLogUrl(a.getAttribute('href'));
+        });
+
+        // arranque (el socket reconciliará de nuevo al conectar)
+        actualizarVista({ scroll: true });
+    })();
+    </script>
+</body>
+</html>

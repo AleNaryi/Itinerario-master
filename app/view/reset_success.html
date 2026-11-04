@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrasena Restablecida - Itinerario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+<div class="main-wrapper">
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-card-header">
+      <span class="header-icon">&#9918;</span>
+      <h2>Contrasena Restablecida</h2>
+    </div>
+    <div class="login-card-body text-center">
+      <div style="font-size:3rem;margin-bottom:1rem">&#9989;</div>
+      <p class="mb-4" style="color:#334155;font-size:0.95rem">
+        Tu contrasena se ha restablecido exitosamente.<br>
+        Ya puedes iniciar sesion con tu nueva contrasena.
+      </p>
+      <a href="{{ url_for('auth.login') }}" class="btn-login" style="display:inline-block;text-decoration:none;text-align:center">
+        <i class="fas fa-sign-in-alt"></i> Iniciar sesion
+      </a>
+    </div>
+    <div class="login-footer">
+      Sistema de Gestion de Itinerario &mdash; Estadio
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>

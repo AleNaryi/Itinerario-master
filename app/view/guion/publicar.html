@@ -1,0 +1,35 @@
+{% include 'components/head.html' %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">📢 Publicar Guión</h5>
+            </div>
+            <div class="card-body">
+                <h4>{{ guion.nombre }}</h4>
+                <p><strong>Fechas:</strong>
+                    {% for f in guion.fechas %}
+                        <span class="badge bg-info">{{ f.fecha.strftime('%d/%m/%Y') }}</span>
+                    {% endfor %}
+                </p>
+                <p><strong>Elementos:</strong> {{ guion.elementos|length }}</p>
+
+                <div class="alert alert-warning">
+                    ⚠️ Al publicar este guión, estará disponible para todos los departamentos.
+                </div>
+
+                <form novalidate method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-bullhorn me-1"></i> Publicar</button>
+                        <a href="{{ url_for('guion.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionGuion.js') }}"></script>
+{% include 'components/footer.html' %}

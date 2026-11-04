@@ -1,0 +1,189 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                <i class="fas fa-users me-2 text-primary"></i>Usuarios
+            </h1>
+            <p class="text-muted mb-0">Gesti&oacute;n de usuarios del sistema.</p>
+        </div>
+        {% if current_user.is_admin() %}
+        <button type="button" class="btn btn-primary px-4 py-2 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#usuarioModal" id="btnNuevoUsuario">
+            <i class="fas fa-plus me-2"></i> Nuevo Usuario
+        </button>
+        {% endif %}
+    </div>
+
+    {% if mensaje %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ mensaje }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-list me-2 text-primary"></i>Lista de Usuarios
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0" id="tablaUsuarios">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>C&eacute;dula</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Departamento</th>
+                            <th>Tel&eacute;fono</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th class="no-order">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="usuarioModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="modalTitle"><i class="fas fa-user me-2"></i>Crear Nuevo Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form novalidate id="usuarioForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="idUsuario" value="">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre" maxlength="25" required>
+                            <div class="invalid-feedback">El nombre debe tener entre 2 y 25 caracteres</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cedula" class="form-label fw-semibold">C&eacute;dula <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="cedula" maxlength="10" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')" required>
+                            <div class="invalid-feedback">La c&eacute;dula debe tener entre 6 y 10 n&uacute;meros</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="email" class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" required>
+                            <div class="invalid-feedback">El email es obligatorio</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="rol" class="form-label fw-semibold">Rol <span class="text-danger">*</span></label>
+                            <select class="form-select" id="rol" required>
+                                <option value="">Seleccionar...</option>
+                                {% for r in roles %}
+                                <option value="{{ r.nombre }}">{{ r.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Debe seleccionar un rol</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="departamento" class="form-label fw-semibold">Departamento <span class="text-danger">*</span></label>
+                            <select class="form-select" id="departamento" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="Medios">Medios</option>
+                                <option value="Palco de Operaciones">Palco de Operaciones</option>
+                            </select>
+                            <div class="invalid-feedback">Debe seleccionar un departamento</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="telefono" class="form-label fw-semibold">Tel&eacute;fono</label>
+                            <div class="input-group">
+                                <select class="form-select" id="telefono_prefix" style="max-width:100px" required>
+                                    <option value="+58">🇻🇪 +58</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+34">🇪🇸 +34</option>
+                                    <option value="+57">🇨🇴 +57</option>
+                                    <option value="+52">🇲🇽 +52</option>
+                                    <option value="+54">🇦🇷 +54</option>
+                                    <option value="+56">🇨🇱 +56</option>
+                                    <option value="+51">🇵🇪 +51</option>
+                                    <option value="+507">🇵🇦 +507</option>
+                                    <option value="+593">🇪🇨 +593</option>
+                                    <option value="+591">🇧🇴 +591</option>
+                                    <option value="+53">🇨🇺 +53</option>
+                                </select>
+                                <input type="text" class="form-control" id="telefono" maxlength="12" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')">
+                            </div>
+                            <div class="invalid-feedback">Tel&eacute;fono inv&aacute;lido</div>
+                        </div>
+                        <div class="col-md-6 campo-password">
+                            <label for="password" class="form-label fw-semibold">Contrase&ntilde;a <span class="text-danger">*</span></label>
+                            <div class="password-toggle">
+                                <input type="password" class="form-control" id="password" maxlength="30">
+                                <i class="fas fa-eye password-eye" onclick="togglePass(this)"></i>
+                            </div>
+                            <div class="invalid-feedback">La contrase&ntilde;a debe tener entre 8 y 30 caracteres</div>
+                        </div>
+                        <div class="col-md-6 campo-password">
+                            <label for="confirm_password" class="form-label fw-semibold">Confirmar Contrase&ntilde;a <span class="text-danger">*</span></label>
+                            <div class="password-toggle">
+                                <input type="password" class="form-control" id="confirm_password" maxlength="30">
+                                <i class="fas fa-eye password-eye" onclick="togglePass(this)"></i>
+                            </div>
+                            <div class="invalid-feedback">Las contrase&ntilde;as no coinciden</div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="activo" checked>
+                                <label class="form-check-label fw-semibold" for="activo">Usuario Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 px-4 py-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnAccion">
+                        <i class="fas fa-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Eliminar Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">¿Est&aacute; seguro de eliminar este usuario?</p>
+                <p class="text-muted small mb-0">Esta acci&oacute;n eliminar&aacute; el usuario permanentemente.</p>
+                <input type="hidden" id="idUsuarioEliminar" value="">
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 py-3">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnEliminar">
+                    <i class="fas fa-trash me-1"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePass(el) {
+  var inp = el.parentElement.querySelector('input');
+  if (!inp) return;
+  var t = inp.type;
+  inp.type = t === 'password' ? 'text' : 'password';
+  el.className = t === 'password' ? 'fas fa-eye-slash password-eye' : 'fas fa-eye password-eye';
+}
+</script>
+<script type="module" src="{{ url_for('static', filename='js/GestionUsuario.js') }}"></script>
+{% include 'components/footer.html' %}

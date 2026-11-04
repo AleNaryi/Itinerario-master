@@ -1,0 +1,64 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold text-dark mb-1">Mis Tareas</h4>
+      <p class="text-muted small mb-0">Tareas asignadas a ti</p>
+    </div>
+    <div class="d-flex gap-2">
+      <div class="kpi-box kpi-amber text-center px-4 py-2">
+        <span class="fw-extrabold fs-5 lh-1">{{ pendientes }}</span>
+        <small class="d-block text-uppercase fw-bold opacity-75" style="font-size: 0.6rem;">Pendientes</small>
+      </div>
+      <a href="{{ url_for('dashboard.panel') }}" class="btn btn-outline-secondary py-2">
+        <i class="fas fa-arrow-left me-1"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    {% for t in tareas %}
+    <div class="col-lg-4 col-md-6">
+      <div class="bento-card p-4 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h6 class="fw-bold text-dark mb-0">{{ t.Nombre_Tarea or '—' }}</h6>
+          <span class="badge rounded-pill px-3 {% if t.Estado == 'Completada' %}bg-success-subtle text-success{% elif t.Estado == 'En Progreso' %}bg-warning-subtle text-warning{% else %}bg-secondary-subtle text-secondary{% endif %}">
+            {{ t.Estado }}
+          </span>
+        </div>
+        <p class="text-muted small flex-grow-1 mb-3">{{ t.Instruccion or 'Sin instrucciones' }}</p>
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+          <small class="text-muted">
+            {% if t.fecha_asignacion_tarea %}
+              {{ t.fecha_asignacion_tarea.strftime('%d/%m/%Y') if t.fecha_asignacion_tarea.strftime else t.fecha_asignacion_tarea }}
+            {% endif %}
+          </small>
+          {% if t.Estado != 'Completada' %}
+          <form novalidate method="POST" action="{{ url_for('gestion_tarea.completar') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="id_asignacion" value="{{ t.id_asignacion }}">
+            <button type="submit" class="btn btn-sm btn-success rounded-3 px-3">
+              <i class="fas fa-check me-1"></i> Completar
+            </button>
+          </form>
+          {% else %}
+          <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i> Finalizada</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+      <div class="bento-card p-5 text-center text-muted">
+        <i class="fas fa-clipboard-list fa-3x mb-3 opacity-25"></i>
+        <h6 class="fw-bold">No tienes tareas pendientes</h6>
+        <p class="small mb-0">Cuando te asignen una tarea, aparecerá aquí.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionTarea.js') }}"></script>
+{% include 'components/footer.html' %}

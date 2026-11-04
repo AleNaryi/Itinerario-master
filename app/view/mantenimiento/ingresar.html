@@ -1,0 +1,49 @@
+{% include 'components/head.html' %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white py-3 px-4">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-wrench me-2"></i>Ingresar a Mantenimiento</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 p-3 bg-light rounded">
+                    <h6 class="fw-bold">Recurso:</h6>
+                    <p class="mb-1"><strong>{{ recurso.nombre }}</strong></p>
+                    <p class="mb-0 text-muted">{{ recurso.descripcion or 'Sin descripción' }}</p>
+                </div>
+
+                <form novalidate method="POST" id="formIngresar">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="fecha_ingreso" class="form-label fw-bold">Fecha de Ingreso <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="fecha_ingreso" name="fecha_ingreso" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="diagnostico" class="form-label fw-bold">Diagnóstico <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="diagnostico" name="diagnostico" rows="3" placeholder="¿Qué problema presenta?" maxlength="500" required></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="observaciones" class="form-label fw-bold">Observaciones</label>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="2" placeholder="Notas adicionales..." maxlength="500"></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm fw-bold">
+                            <i class="fas fa-save me-1"></i> Ingresar a Mantenimiento
+                        </button>
+                        <a href="{{ url_for('mantenimiento.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionMantenimiento.js') }}"></script>
+{% include 'components/footer.html' %}

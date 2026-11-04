@@ -1,0 +1,48 @@
+<div class="captcha-tiles-box">
+  <div class="captcha-tiles-row">
+    {% for p in captcha_params.chars %}
+    <span class="captcha-tile"
+          style="color:{{ p.color }}; background:{{ p.bg }}; font-size:{{ p.size }}px; transform:rotate({{ p.rot }}deg)">
+      {{ p.char }}
+    </span>
+    {% endfor %}
+    <button type="button" class="captcha-refresh" onclick="refreshCaptchaTile()" title="Nuevo codigo">
+      <i class="fas fa-sync-alt"></i>
+    </button>
+  </div>
+  <div class="captcha-input-row">
+    <input type="text" name="captcha_text" id="captcha_text"
+           class="form-control form-control-sm captcha-input"
+           placeholder="Codigo" autocomplete="off" maxlength="4">
+    <div class="invalid-feedback"></div>
+  </div>
+</div>
+<script>
+function refreshCaptchaTile() {
+  var btn = document.querySelector('.captcha-refresh')
+  var row = document.querySelector('.captcha-tiles-row')
+  if (!btn || !row) return
+  btn.disabled = true
+  btn.querySelector('i').className = 'fas fa-sync-alt fa-spin'
+  fetch('/auth/refresh-captcha', {headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(function(r){ return r.json() })
+    .then(function(p){
+      var tiles = row.querySelectorAll('.captcha-tile')
+      for (var i = 0; i < tiles.length && i < p.chars.length; i++) {
+        var c = p.chars[i]
+        tiles[i].textContent = c.char
+        tiles[i].style.color = c.color
+        tiles[i].style.background = c.bg
+        tiles[i].style.fontSize = c.size + 'px'
+        tiles[i].style.transform = 'rotate(' + c.rot + 'deg)'
+      }
+      var inp = document.getElementById('captcha_text')
+      if (inp) { inp.value = ''; inp.focus() }
+    })
+    .catch(function(){})
+    .then(function(){
+      btn.disabled = false
+      btn.querySelector('i').className = 'fas fa-sync-alt'
+    })
+}
+</script>

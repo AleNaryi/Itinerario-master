@@ -1,0 +1,104 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white border-bottom py-3 px-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-eye me-2 text-primary"></i>Vista Previa - {{ guion.nombre }}
+            {% if tiempo_total_seg %}
+            {% set tt_m = tiempo_total_seg // 60 %}
+            {% set tt_s = tiempo_total_seg % 60 %}
+            <span class="badge bg-primary ms-2 fs-6">⏱️ {{ tt_m }}m {% if tt_s %}{{ tt_s }}s{% endif %}</span>
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><th width="100">Nombre:</th><td>{{ guion.nombre }}</td></tr>
+                    <tr><th>Fechas:</th><td>
+                        {% for fecha in fechas %}
+                            <span class="badge bg-info">{{ fecha.fecha.strftime('%d/%m/%Y') }}</span>
+                        {% endfor %}
+                    </td></tr>
+                    <tr><th>Estado:</th><td>{{ guion.estado }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        {% if pregame %}
+        <div class="mb-4">
+            <h6 class="fw-bold text-warning">🕐 Pre-Game</h6>
+            <table class="table table-sm table-striped">
+                <thead class="table-warning">
+                    <tr><th>#</th><th>Hora</th><th>Contenido</th><th>Dur.</th><th>Encargado</th></tr>
+                </thead>
+                <tbody>
+                    {% for e in pregame %}
+                    {% set ts = e.hora.total_seconds() | int %}
+                    {% set h = ts // 3600 %}
+                    {% set m = (ts % 3600) // 60 %}
+                    {% set ampm = 'AM' if h < 12 else 'PM' %}
+                    {% set h12 = h % 12 or 12 %}
+                    {% set total_min = h * 60 + m + (e.duracion_estimada // 60) %}
+                    {% set eh = (total_min // 60) % 24 %}
+                    {% set em = total_min % 60 %}
+                    {% set eampm = 'AM' if eh < 12 else 'PM' %}
+                    {% set eh12 = eh % 12 or 12 %}
+                    {% set dm = e.duracion_estimada // 60 %}
+                    {% set ds = e.duracion_estimada % 60 %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ h12 }}:{{ '%02d' % m }} {{ ampm }} - {{ eh12 }}:{{ '%02d' % em }} {{ eampm }}</strong></td>
+                        <td>{{ e.contenido }}</td>
+                        <td>{{ dm }}m{% if ds %} {{ ds }}s{% endif %}</td>
+                        <td>{{ e.encargado }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if game %}
+        <div>
+            <h6 class="fw-bold text-primary">⚾ Game</h6>
+            <table class="table table-sm table-striped">
+                <thead class="table-primary">
+                    <tr><th>#</th><th>Inning</th><th>Contenido</th><th>Dur.</th><th>Encargado</th></tr>
+                </thead>
+                <tbody>
+                    {% for e in game %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ e.inning }}° {{ e.medio_inning|capitalize }}</strong></td>
+                        <td>{{ e.contenido }}</td>
+                        {% set dm = e.duracion_estimada // 60 %}
+                        {% set ds = e.duracion_estimada % 60 %}
+                        <td>{{ dm }}m{% if ds %} {{ ds }}s{% endif %}</td>
+                        <td>{{ e.encargado }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if not pregame and not game %}
+        <div class="alert alert-info">No hay elementos agregados.</div>
+        {% endif %}
+
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            <a href="{{ url_for('guion.agregar_elementos', id=guion.id) }}" class="btn btn-success btn-sm"><i class="fas fa-plus me-1"></i> Elementos</a>
+            <a href="{{ url_for('guion.editar', id=guion.id) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Editar</a>
+            {% if guion.estado == 'borrador' %}
+            <a href="{{ url_for('guion.publicar', id=guion.id) }}" class="btn btn-primary btn-sm"><i class="fas fa-bullhorn me-1"></i> Publicar</a>
+            {% endif %}
+            <a href="{{ url_for('guion.dashboard') }}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Volver</a>
+        </div>
+    </div>
+</div>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionGuion.js') }}"></script>
+{% include 'components/footer.html' %}

@@ -1,0 +1,215 @@
+    </main>
+</div>
+
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}" id="globalCsrfToken">
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% if current_user.is_authenticated %}
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+    var sidebar = document.getElementById('sidebar');
+    var toggle = document.getElementById('sidebarToggle');
+    var overlay = document.getElementById('sidebarOverlay');
+
+    function closeSidebar() {
+        if (sidebar) sidebar.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    if (toggle) {
+        toggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
+
+    if (sidebar) {
+        sidebar.querySelectorAll('.sidebar-nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) closeSidebar();
+            });
+        });
+    }
+
+    window.appSocket = io();
+    window.appSocket.on('connect', function() {
+        window.appSocket.emit('registrar_usuario', {
+            user_id: {{ current_user.id }},
+            nombre: {{ current_user.nombre|tojson }},
+            pagina: window.location.pathname,
+            en_vivo_id: null
+        });
+    });
+
+    window.appSocket.on('usuarios_actualizados', function(data) {
+        document.querySelectorAll('.online-count-badge').forEach(function(el) {
+            el.textContent = data.count;
+        });
+
+        var container = document.getElementById('user-list');
+        if (container) {
+            if (data.count === 0) {
+                container.innerHTML = '<div class="online-empty"><i class="fas fa-user-slash"></i><p>Sin usuarios conectados</p></div>';
+            } else {
+                var html = '';
+                data.usuarios.forEach(function(u) {
+                    var path = u.pagina || '/';
+                    var modulo = 'Desconocido';
+                    if (path.startsWith('/dashboard')) modulo = 'Inicio';
+                    else if (path.startsWith('/usuario')) modulo = 'Usuarios';
+                    else if (path.startsWith('/guion')) modulo = 'Gestion de Guion';
+                    else if (path.startsWith('/en-vivo')) modulo = 'Guion en Vivo';
+                    else if (path.startsWith('/contrato')) modulo = 'Contratos';
+                    else if (path.startsWith('/patrocinador')) modulo = 'Patrocinantes';
+                    else if (path.startsWith('/premio')) modulo = 'Premios';
+                    else if (path.startsWith('/mantenimiento')) modulo = 'Mantenimiento';
+                    else if (path.startsWith('/gestion-tarea')) modulo = 'Tareas';
+                    else if (path.startsWith('/balance')) modulo = 'Balance';
+                    else if (path.startsWith('/bitacora')) modulo = 'Bitacora';
+                    else if (path.startsWith('/rol')) modulo = 'Roles';
+
+                    var envivo = u.en_vivo_id !== null && u.en_vivo_id !== undefined;
+                    var statusClass = envivo ? 'online-status vivo' : 'online-status active';
+                    var initials = (u.nombre || '?').substring(0, 2).toUpperCase();
+
+                    html += '<li class="online-item">'
+                         + '<div class="online-avatar">' + initials + '</div>'
+                         + '<div class="online-info">'
+                         + '<div class="on-name">' + (u.nombre || 'Desconocido') + '</div>'
+                         + '<div class="on-module">' + modulo + '</div>'
+                         + '</div>'
+                         + '<span class="' + statusClass + '"></span>'
+                         + '</li>';
+                });
+                container.innerHTML = html;
+            }
+        }
+
+        var evt = new CustomEvent('onlineUsuarios', { detail: data });
+        document.dispatchEvent(evt);
+    });
+</script>
+{% endif %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}">
+    <script src="{{ url_for('static', filename='js/sweetalert2.min.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/RegExp.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/validacion.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables.bootstrap5.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/initDataTables.js') }}"></script>
+{% if current_user.is_authenticated %}
+<script src="{{ url_for('static', filename='js/notificaciones.js') }}"></script>
+{% endif %}
+
+{% if current_user.is_authenticated %}
+<style>
+.logout-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: linear-gradient(135deg, #0b1f3a 0%, #132a60 40%, #1e3a5f 100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.logout-loading.show { display: flex; }
+.logout-loading .lo-logo {
+  width: 80px; margin-bottom: 1.5rem;
+  opacity: 0; transition: all 0.5s ease;
+}
+.logout-loading .lo-logo.show { opacity: 1; }
+.logout-loading .lo-title {
+  color: rgba(255,255,255,0.6); font-size: 0.85rem;
+  font-weight: 500; letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 1.25rem; opacity: 0; transition: all 0.5s ease;
+}
+.logout-loading .lo-title.show { opacity: 1; }
+.logout-loading .lo-track {
+  width: 260px; height: 28px;
+  background: rgba(255,255,255,0.08); border-radius: 14px;
+  position: relative; overflow: hidden; opacity: 0; transition: all 0.5s ease;
+}
+.logout-loading .lo-track.show { opacity: 1; }
+.logout-loading .lo-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  border-radius: 14px; transition: width 0.35s ease;
+}
+.logout-loading .lo-balls {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 5px; z-index: 2;
+}
+.logout-loading .lo-ball {
+  font-size: 1rem; opacity: 0; transform: scale(0);
+  filter: grayscale(1) brightness(1.5);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.logout-loading .lo-ball.active { opacity: 1; transform: scale(1); filter: grayscale(0) brightness(1); }
+</style>
+
+<div class="logout-loading" id="logoutLoading">
+  <img class="lo-logo" id="loLogo" src="{{ url_for('static', filename='img/Logo-blanco.png') }}" alt="Logo">
+  <div class="lo-title" id="loTitle">Saliendo del sistema</div>
+  <div class="lo-track" id="loTrack">
+    <div class="lo-fill" id="loFill"></div>
+    <div class="lo-balls">
+      <span class="lo-ball">&#9918;</span>
+      <span class="lo-ball">&#9918;</span>
+      <span class="lo-ball">&#9918;</span>
+      <span class="lo-ball">&#9918;</span>
+      <span class="lo-ball">&#9918;</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var link = document.querySelector('a[href="{{ url_for('auth.logout') }}"]');
+  if (!link) return;
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    var href = this.getAttribute('href');
+    var overlay = document.getElementById('logoutLoading');
+    var logo = document.getElementById('loLogo');
+    var title = document.getElementById('loTitle');
+    var track = document.getElementById('loTrack');
+    var fill = document.getElementById('loFill');
+    var balls = document.querySelectorAll('.lo-ball');
+
+    overlay.classList.add('show');
+    requestAnimationFrame(function() {
+      logo.classList.add('show');
+      setTimeout(function() { title.classList.add('show'); }, 150);
+      setTimeout(function() { track.classList.add('show'); }, 300);
+
+      var current = 0;
+      var total = balls.length;
+      var interval = setInterval(function() {
+        if (current >= total) {
+          clearInterval(interval);
+          fill.style.width = '100%';
+          setTimeout(function() { window.location.href = href; }, 400);
+          return;
+        }
+        balls[current].classList.add('active');
+        current++;
+        fill.style.width = (current / total) * 100 + '%';
+      }, 500);
+    });
+  });
+})();
+</script>
+{% endif %}
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

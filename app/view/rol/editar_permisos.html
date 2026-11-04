@@ -1,0 +1,139 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                <i class="fas fa-user-shield me-2 text-primary"></i>Permisos de {{ usuario.nombre }}
+            </h1>
+            <p class="text-muted mb-0">Configura los permisos individuales de este usuario.</p>
+        </div>
+        <span class="badge bg-secondary fs-6 rounded-pill px-3">
+            {{ usuario.rol }}
+        </span>
+    </div>
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('rol.dashboard') }}">Roles y Permisos</a></li>
+            <li class="breadcrumb-item active">Editar: {{ usuario.nombre }}</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-dark text-white py-3">
+            <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Permisos de {{ usuario.nombre }}</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Los permisos con <strong>badge "Del rol"</strong> vienen del rol <strong>{{ usuario.rol }}</strong> y están pre-asignados.
+                Puedes <strong>agregar</strong> permisos adicionales marcando los checkboxes vacíos.
+                Los permisos marcados como <strong>"Individual"</strong> se pueden desmarcar para revocarlos.
+            </div>
+
+            <form novalidate method="POST" action="{{ url_for('rol.editar', id=usuario.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                {% for modulo, permisos in permisos_agrupados.items() %}
+                <div class="card mb-3 border-start border-4 border-secondary">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                        <h5 class="mb-0"><i class="fas fa-cubes me-2"></i>{{ modulo }}</h5>
+                        <button type="button" class="btn btn-sm btn-outline-secondary select-all-module" data-modulo="{{ modulo }}">
+                            <i class="fas fa-check-double me-1"></i>Seleccionar todos
+                        </button>
+                    </div>
+                    <div class="card-body py-2">
+                        {% for permiso in permisos %}
+                        {% set es_del_rol = permiso.id in permisos_rol %}
+                        {% set es_individual = permiso.id in permisos_individuales %}
+                        {% set tiene_permiso = es_del_rol or es_individual %}
+                        <div class="form-check form-switch mb-2 permiso-item" data-modulo="{{ modulo }}">
+                            <input class="form-check-input permiso-checkbox"
+                                   type="checkbox"
+                                   name="permisos"
+                                   value="{{ permiso.id }}"
+                                   id="permiso_{{ permiso.id }}"
+                                   {% if tiene_permiso %}checked{% endif %}
+                                   {% if es_del_rol %}disabled{% endif %}>
+                            <label class="form-check-label d-flex align-items-center" for="permiso_{{ permiso.id }}">
+                                <span class="me-2">{{ permiso.nombre }}</span>
+                                {% if es_del_rol %}
+                                <span class="badge bg-info rounded-pill small">Del rol: {{ usuario.rol }}</span>
+                                {% elif es_individual %}
+                                <span class="badge bg-success rounded-pill small">Individual</span>
+                                {% else %}
+                                <span class="badge bg-light text-muted rounded-pill small border">Sin asignar</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="card mb-3 border-start border-4 border-info">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Dashboard Individual</h5>
+                        <button type="button" class="btn btn-sm btn-outline-secondary select-all-module" data-modulo="dashboard">
+                            <i class="fas fa-check-double me-1"></i>Seleccionar todos
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info py-2 small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Los módulos con badge <strong>"Del rol"</strong> vienen del rol <strong>{{ usuario.rol }}</strong>.
+                            Puedes <strong>agregar</strong> módulos marcando checkboxes vacíos.
+                            Los módulos marcados como <strong>"Individual"</strong> se pueden desmarcar para ocultarlos.
+                        </div>
+                        <div class="row">
+                            {% for key, info in modulos_dashboard_info.items() %}
+                            {% set es_del_rol = key in dashboard_base_rol and key not in dashboard_user_overrides %}
+                            {% set es_individual = key in dashboard_user_overrides %}
+                            {% set visible = es_del_rol or (es_individual and dashboard_vis_user[key].visible) %}
+                            <div class="col-md-3 mb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input dashboard-mod-checkbox"
+                                           type="checkbox"
+                                           name="dashboard_modulos"
+                                           value="{{ key }}"
+                                           id="dash_{{ key }}"
+                                           {% if visible %}checked{% endif %}
+                                           {% if es_del_rol %}disabled{% endif %}>
+                                    <label class="form-check-label d-flex align-items-center" for="dash_{{ key }}">
+                                        <i class="fas {{ info.icono }} me-1" style="color:var(--d{{ info.color }})"></i>
+                                        <span class="me-2">{{ info.nombre }}</span>
+                                        {% if es_del_rol %}
+                                        <span class="badge bg-info rounded-pill small">Del rol</span>
+                                        {% elif es_individual %}
+                                        <span class="badge bg-success rounded-pill small">Individual</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-muted rounded-pill small border">Por defecto</span>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
+                    <a href="{{ url_for('rol.dashboard') }}" class="btn btn-light px-4">
+                        <i class="fas fa-arrow-left me-1"></i>Volver
+                    </a>
+                    <button type="submit" class="btn btn-warning px-4 fw-bold">
+                        <i class="fas fa-save me-2"></i>Guardar Permisos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% include 'components/footer.html' %}
+
+{% block extra_js %}
+<script type="module" src="{{ url_for('static', filename='js/GestionRol.js') }}"></script>
+{% endblock %}

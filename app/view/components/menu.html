@@ -1,0 +1,43 @@
+<ul class="sidebar-nav">
+    <li><a href="{{ url_for('dashboard.panel') }}"><i class="fas fa-home"></i><span>Inicio</span></a></li>
+    {% if current_user.tiene_permiso('usuario.view') %}
+    <li><a href="{{ url_for('usuario.dashboard') }}"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('guion.view') %}
+    <li><a href="{{ url_for('guion.dashboard') }}"><i class="fas fa-scroll"></i><span>Guion</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('envivo.view') %}
+    <li><a href="{{ url_for('en_vivo.index') }}"><i class="fas fa-play-circle"></i><span>En Vivo</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('patrocinador.view') %}
+    <li><a href="{{ url_for('patrocinador.dashboard') }}"><i class="fas fa-handshake"></i><span>Patrocinantes</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('contrato.view') %}
+    <li><a href="{{ url_for('contrato.dashboard') }}"><i class="fas fa-file-contract"></i><span>Contratos</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('premio.view') %}
+    <li><a href="{{ url_for('premio.dashboard') }}"><i class="fas fa-gift"></i><span>Premios</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('inventario.view') %}
+    <li><a href="{{ url_for('inventario.dashboard') }}"><i class="fas fa-cubes"></i><span>Inventario</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('reels.view') %}
+    <li><a href="{{ url_for('reels.dashboard') }}"><i class="fas fa-video"></i><span>Reels</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('mantenimiento.view') %}
+    <li><a href="{{ url_for('mantenimiento.dashboard') }}"><i class="fas fa-tools"></i><span>Mantenimiento</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('gestion_tarea.supervisar') %}
+    <li><a href="{{ url_for('gestion_tarea.dashboard') }}"><i class="fas fa-tasks"></i><span>Gestion de Tareas</span></a></li>
+    {% elif current_user.tiene_permiso('gestion_tarea.view') %}
+    <li><a href="{{ url_for('gestion_tarea.tareas_usuario') }}"><i class="fas fa-clipboard-list"></i><span>Mis Tareas</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('balance.view') %}
+    <li><a href="{{ url_for('balance.dashboard') }}"><i class="fas fa-balance-scale"></i><span>Balance</span></a></li>
+    {% endif %}
+    {% if current_user.tiene_permiso('rol.view') %}
+    <li><a href="{{ url_for('rol.dashboard') }}"><i class="fas fa-shield-alt"></i><span>Roles y Permisos</span></a></li>
+    <li><a href="{{ url_for('bitacora.dashboard') }}"><i class="fas fa-clipboard-list"></i><span>Bitacora</span></a></li>
+    <li><a href="{{ url_for('reportes.dashboard') }}"><i class="fas fa-file-pdf"></i><span>Reportes</span></a></li>
+    {% endif %}
+</ul>

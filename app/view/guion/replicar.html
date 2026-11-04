@@ -1,0 +1,118 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-copy me-2 text-info"></i>Replicar Guión</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Replicando desde: <strong>{{ guion.nombre }}</strong>
+                    ({{ guion.elementos|length }} elementos)
+                </p>
+                <form novalidate method="POST" id="replicarForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="nombre_base" class="form-label fw-bold">Nombre Base</label>
+                        <input type="text" class="form-control" id="nombre_base" name="nombre_base"
+                                value="{{ nombre_base }}" required minlength="3" maxlength="50">
+                        <div class="invalid-feedback"></div>
+                        <small class="text-muted">Se generará como "Nombre Base - YYYY-MM-DD" para cada fecha</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fechas de replicación</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="fechasDisplay" readonly placeholder="Selecciona fechas...">
+                            <button type="button" class="btn btn-outline-primary" id="openCalendar">📅</button>
+                        </div>
+                        <small class="text-muted">Haz clic en el ícono para abrir el calendario</small>
+                    </div>
+
+                    <input type="hidden" name="fechas" id="fechas">
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-info text-white"><i class="fas fa-copy me-1"></i>Replicar Guión</button>
+                        <a href="{{ url_for('guion.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div class="modal fade" id="calendarModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title">Seleccionar Fechas</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-2">
+                <div class="calendar-header d-flex justify-content-between align-items-center mb-2">
+                    <button type="button" class="btn btn-sm btn-link p-0" id="prevMonth">&lt;</button>
+                    <small class="fw-bold" id="monthYear"></small>
+                    <button type="button" class="btn btn-sm btn-link p-0" id="nextMonth">&gt;</button>
+                </div>
+
+                <div class="calendar-grid" id="calendar">
+                    <div class="calendar-weekdays">
+                        <div>D</div><div>L</div><div>M</div><div>Mi</div><div>J</div><div>V</div><div>S</div>
+                    </div>
+                    <div class="calendar-days" id="calendarDays"></div>
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <small id="selectedCount" class="text-muted me-auto">0 fechas</small>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Listo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-sm { max-width: 300px; }
+.calendar-grid {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8f9fa;
+    font-weight: bold;
+    text-align: center;
+    font-size: 11px;
+    padding: 4px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    padding: 2px;
+}
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+    transition: background 0.15s;
+}
+.calendar-day:hover:not(.empty):not(.selected) { background: #e9ecef; }
+.calendar-day.selected { background: #0d6efd; color: white; font-weight: bold; }
+.calendar-day.today { border: 2px solid #0d6efd; }
+.calendar-day.empty { cursor: default; }
+</style>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionGuion.js') }}"></script>
+
+{% include 'components/footer.html' %}

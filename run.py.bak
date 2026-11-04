@@ -1,0 +1,30 @@
+# run.py
+
+from app import create_app, socketio
+
+app = create_app()
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='127.0.0.1', port=5001, use_reloader=True, allow_unsafe_werkzeug=True)
+        
+
+        Tu sistema está desplegado para pruebas
+URL pública	https://directions-reviewed-pig-routines.trycloudflare.com (https://directions-reviewed-pig-routines.trycloudflare.com)
+App local	http://localhost:5001 (http://localhost:5001)
+Para volver a la configuración original:
+1. Detener procesos:
+kill 29466 29524   # o kill %1 %2
+2. Restaurar run.py:
+cp run.py.bak run.py
+
+1. Asegurarte que run.py tenga host='0.0.0.0' (o restaurar desde run.py.bak)
+2. python3 run.py &
+3. cloudflared tunnel --url http://localhost:5001
+
+from app import create_app, socketio
+
+app = create_app()
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='0.0.0.0', port=5001, use_reloader=True, allow_unsafe_werkzeug=True)
+      

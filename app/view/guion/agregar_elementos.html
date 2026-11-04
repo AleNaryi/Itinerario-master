@@ -1,0 +1,206 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+<div class="row g-4">
+    <div class="col-md-5">
+        {% if guion.estado == 'en_vivo' %}
+        <div class="alert alert-warning border-0 shadow-sm h-100 d-flex align-items-center justify-content-center" style="min-height:200px;">
+            <div class="text-center">
+                <i class="fas fa-lock fa-3x mb-3 opacity-50"></i>
+                <p class="mb-0 fw-bold">Este guión está en vivo</p>
+                <small class="text-muted">No se pueden modificar elementos mientras está en vivo.</small>
+            </div>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-list me-2 text-primary"></i>Agregar Elemento</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2"><strong>Guión:</strong> {{ guion.nombre }}</div>
+
+                <form novalidate method="POST" id="elementoForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="tipoSelect" class="form-label fw-bold">Tipo</label>
+                        <select class="form-select form-select-sm" id="tipoSelect" name="tipo">
+                            <option value="pregame">Pre-Game</option>
+                            <option value="game">Game</option>
+                        </select>
+                    </div>
+
+                    <div id="pregameFields">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">¿A qué hora?</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">🕐</span>
+                                <input type="time" class="form-control" id="horaInput" name="hora">
+                            </div>
+                            <small class="text-muted" id="horaWarning" style="display:none;">⚠️ Hora ya ocupada</small>
+                        </div>
+                    </div>
+
+                    <div id="gameFields" style="display:none;">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold">¿Inning?</label>
+                                <select class="form-select form-select-sm" id="inningSelect" name="inning">
+                                    <option value="">--</option>
+                                    <option value="1">1ro</option><option value="2">2do</option>
+                                    <option value="3">3ro</option><option value="4">4to</option>
+                                    <option value="5">5to</option><option value="6">6to</option>
+                                    <option value="7">7mo</option><option value="8">8vo</option>
+                                    <option value="9">9no</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">¿Medio?</label>
+                                <select class="form-select form-select-sm" id="medioSelect" name="medio_inning">
+                                    <option value="">--</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="baja">Baja</option>
+                                </select>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="inningWarning" style="display:none;">⚠️ Inning ya ocupado</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contenido" class="form-label fw-bold">Contenido</label>
+                        <textarea class="form-control form-control-sm" id="contenido" name="contenido" rows="2" placeholder="¿Qué va a suceder?" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="duracion_estimada" class="form-label fw-bold">Duración estimada</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="duracion_estimada" name="duracion_estimada" placeholder="min,seg" maxlength="10" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')">
+                            <span class="input-group-text">min,seg</span>
+                        </div>
+                        <small class="text-muted">Formato: minutos,segundos (ej: 2,30 → 2m 30s)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="encargado" class="form-label fw-bold">Encargado</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">👤</span>
+                            <select class="form-select form-select-sm" id="encargado" name="encargado">
+                                <option value="">-- Seleccionar --</option>
+                                {% for val, label in usuarios_choices %}
+                                <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="submit" value="Agregar y seguir" class="btn btn-success btn-sm"><i class="fas fa-plus me-1"></i> Agregar Elemento</button>
+                        <button type="submit" name="submit_final" value="Finalizar" class="btn btn-primary btn-sm"><i class="fas fa-check me-1"></i> Finalizar Guión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-clipboard-list me-2 text-primary"></i>Elementos del Guión
+                    {% if tiempo_total_seg %}
+                    {% set tt_m = tiempo_total_seg // 60 %}
+                    {% set tt_s = tiempo_total_seg % 60 %}
+                    <span class="badge bg-primary ms-2 fs-6">⏱️ {{ tt_m }}m {% if tt_s %}{{ tt_s }}s{% endif %}</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if elementos %}
+                <table class="table table-sm table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Hora/Inning</th>
+                            <th>Contenido</th>
+                            <th>Dur.</th>
+                            <th>Encargado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for elemento in elementos %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-{{ 'warning' if elemento.tipo == 'pregame' else 'primary' }}">
+                                    {{ 'Pre-Game' if elemento.tipo == 'pregame' else 'Game' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if elemento.tipo == 'pregame' %}
+                                    {% set ts = elemento.hora.total_seconds() | int %}
+                                    {% set h = ts // 3600 %}
+                                    {% set m = (ts % 3600) // 60 %}
+                                    {% set ampm = 'AM' if h < 12 else 'PM' %}
+                                    {% set h12 = h % 12 or 12 %}
+                                    {% set total_min = h * 60 + m + (elemento.duracion_estimada // 60) %}
+                                    {% set eh = (total_min // 60) % 24 %}
+                                    {% set em = total_min % 60 %}
+                                    {% set eampm = 'AM' if eh < 12 else 'PM' %}
+                                    {% set eh12 = eh % 12 or 12 %}
+                                    <strong>{{ h12 }}:{{ '%02d' % m }} {{ ampm }} - {{ eh12 }}:{{ '%02d' % em }} {{ eampm }}</strong>
+                                {% else %}
+                                    <strong>{{ elemento.inning }}° {{ elemento.medio_inning|capitalize }}</strong>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ elemento.contenido[:35] }}{% if elemento.contenido|length > 35 %}...{% endif %}</small></td>
+                            {% set dm = elemento.duracion_estimada // 60 %}
+                            {% set ds = elemento.duracion_estimada % 60 %}
+                            <td><small>{{ dm }}m{% if ds %} {{ ds }}s{% endif %}</small></td>
+                            <td><small>{{ elemento.encargado }}</small></td>
+                            <td>
+                                {% if guion.estado != 'en_vivo' %}
+                                <a href="{{ url_for('guion.editar_elemento', guion_id=guion.id, elemento_id=elemento.id) }}"
+                                   class="btn btn-sm btn-link text-warning p-0 me-1" title="Editar">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <a href="{{ url_for('guion.eliminar_elemento', guion_id=guion.id, elemento_id=elemento.id) }}"
+                                   class="btn btn-sm btn-link text-danger p-0" title="Eliminar"
+                                   data-confirm="¿Eliminar este elemento?">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-info text-center py-2"><small>No hay elementos aún.</small></div>
+                {% endif %}
+
+                {% if elementos %}
+                <div class="text-center mt-2">
+                    {% if guion.estado != 'en_vivo' %}
+                    <a href="{{ url_for('guion.dashboard') }}" class="btn btn-primary btn-sm"><i class="fas fa-check me-1"></i> Finalizar</a>
+                    {% endif %}
+                    <a href="{{ url_for('guion.previsualizar', id=guion.id) }}" class="btn btn-info btn-sm"><i class="fas fa-eye me-1"></i> Ver</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+#duracion_estimada[readonly] { background: #f0f0f0; cursor: not-allowed; }
+</style>
+<script>
+window.horasUsadas = {{ horas_usadas | list | tojson }};
+window.inningsUsados = {{ innings_usados | tojson }};
+window.guionId = {{ guion.id }};
+window.tiempoInning = {{ tiempo_inning if tiempo_inning else 'null' }};
+</script>
+<script type="module" src="{{ url_for('static', filename='js/GestionGuion.js') }}"></script>
+
+{% include 'components/footer.html' %}

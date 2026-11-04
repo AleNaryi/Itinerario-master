@@ -1,0 +1,149 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                <i class="fas fa-exchange-alt me-2 text-primary"></i>Gesti&oacute;n de Asignaciones
+            </h1>
+            <p class="text-muted mb-0">Administra las asignaciones y devoluciones de recursos</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('inventario.dashboard') }}" class="btn btn-outline-primary px-4 py-2 shadow-sm fw-bold">
+                <i class="fas fa-arrow-left me-2"></i> Volver
+            </a>
+            <button type="button" class="btn btn-primary px-4 py-2 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#asignarModal">
+                <i class="fas fa-plus me-2"></i> Nueva Asignaci&oacute;n
+            </button>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0 datatable" id="tablaAsignaciones">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Recurso</th>
+                            <th>Usuario</th>
+                            <th>Fecha Asignaci&oacute;n</th>
+                            <th>Dev. Esperada</th>
+                            <th>Dev. Real</th>
+                            <th>Estado</th>
+                            <th class="no-order">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asig in asignaciones %}
+                        <tr>
+                            <td>{{ asig.id }}</td>
+                            <td>{{ asig.recurso_nombre or 'N/A' }}</td>
+                            <td>{{ asig.usuario_nombre or 'N/A' }}</td>
+                            <td>{{ asig.fecha_asignacion.strftime('%Y-%m-%d %H:%M') if asig.fecha_asignacion else '' }}</td>
+                            <td>{{ asig.fecha_devolucion_esperada if asig.fecha_devolucion_esperada else '—' }}</td>
+                            <td>
+                                {% if asig.fecha_devolucion_real %}
+                                    {{ asig.fecha_devolucion_real.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if asig.fecha_devolucion_real %}
+                                    <span class="badge bg-success">Devuelto</span>
+                                {% else %}
+                                    <span class="badge bg-primary">{{ asig.estado_asignacion_nombre or 'Pendiente' }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if not asig.fecha_devolucion_real %}
+                                <form novalidate method="POST" action="{{ url_for('inventario.devolver_recurso', asignacion_id=asig.id) }}" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-success btn-confirm-devolver" data-nombre="{{ asig.recurso_nombre or 'recurso' }}">
+                                        <i class="fas fa-undo"></i> Devolver
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="asignarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white border-0 py-3 px-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-handshake me-2"></i>Asignar Recurso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form novalidate method="POST" action="{{ url_for('inventario.asignar_desde_gestion') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Recurso <span class="text-danger">*</span></label>
+                        <select name="recurso_id" class="form-select" required>
+                            <option value="" disabled selected>Seleccione un recurso</option>
+                            {% for recurso in recursos %}
+                            <option value="{{ recurso.id }}">{{ recurso.nombre }} ({{ recurso.tipo_nombre or 'Sin tipo' }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Usuario <span class="text-danger">*</span></label>
+                        <select name="usuario_id" class="form-select" required>
+                            <option value="" disabled selected>Seleccione un usuario</option>
+                            {% for usuario in usuarios %}
+                            <option value="{{ usuario.id }}">{{ usuario.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Fecha esperada de devoluci&oacute;n</label>
+                        <input type="date" name="fecha_devolucion_esperada" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Notas</label>
+                        <textarea name="notas" class="form-control" rows="2" maxlength="500" placeholder="Motivo de la asignaci&oacute;n"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary shadow-sm fw-bold px-4">Guardar Asignaci&oacute;n</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-confirm-devolver').forEach(btn => {
+        btn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const nombre = this.dataset.nombre;
+            const result = await Swal.fire({
+                title: '¿Registrar devoluci&oacute;n?',
+                text: `Devolver "${nombre}" al inventario`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                confirmButtonText: 'Devolver',
+                cancelButtonText: 'Cancelar'
+            });
+            if (result.isConfirmed) form.submit();
+        });
+    });
+});
+</script>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionInventario.js') }}"></script>
+{% include 'components/footer.html' %}

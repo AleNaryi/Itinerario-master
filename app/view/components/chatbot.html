@@ -1,0 +1,52 @@
+{% if current_user.is_authenticated %}
+<!-- Chatbot Aurora -->
+<div class="aurora-chat-container" id="auroraChatContainer">
+    <div class="aurora-chat-panel" id="auroraChatPanel">
+        <div class="aurora-chat-header">
+            <div class="aurora-chat-header-info">
+                <div class="aurora-avatar-sm">
+                    <img src="{{ url_for('static', filename='img/Logo-blanco.png') }}" alt="Aurora" class="aurora-avatar-img">
+                </div>
+                <div>
+                    <span class="aurora-chat-name">Aurora</span>
+                    <span class="aurora-chat-status">Asistente Itinerario</span>
+                </div>
+            </div>
+            <button class="aurora-chat-close" id="auroraChatClose" title="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="aurora-chat-messages" id="auroraChatMessages">
+            <div class="aurora-msg aurora-msg-ia">
+                <div class="aurora-msg-avatar">
+                    <img src="{{ url_for('static', filename='img/Logo-blanco.png') }}" alt="Aurora" class="aurora-avatar-img">
+                </div>
+                <div class="aurora-msg-bubble">Hola, soy **Aurora**. ¿En qué te puedo ayudar?</div>
+            </div>
+        </div>
+
+        <div class="aurora-chat-suggestions" id="auroraChatSuggestions">
+            <button class="aurora-suggestion" data-msg="¿Cuántos guiones hay?">Cuántos guiones</button>
+            <button class="aurora-suggestion" data-msg="¿Qué contratos están vigentes?">Contratos vigentes</button>
+            <button class="aurora-suggestion" data-msg="¿Qué hicieron los usuarios hoy?">Actividad hoy</button>
+            <button class="aurora-suggestion" data-msg="¿Cómo creo un guion?">Crear un guion</button>
+        </div>
+
+        <div class="aurora-chat-input-area">
+            <input type="text" id="auroraChatInput" class="aurora-chat-input"
+                   placeholder="Escribe tu pregunta..." autocomplete="off">
+            <button class="aurora-chat-send" id="auroraChatSend" title="Enviar">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <button class="aurora-chat-fab" id="auroraChatFab" title="Aurora - Asistente">
+        <img src="{{ url_for('static', filename='img/Logo-blanco.png') }}" alt="Aurora" class="aurora-avatar-img">
+        <span class="aurora-fab-label">Aurora</span>
+    </button>
+</div>
+
+<script src="{{ url_for('static', filename='js/GestionChat.js') }}"></script>
+{% endif %}

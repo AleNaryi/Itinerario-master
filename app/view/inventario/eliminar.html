@@ -1,0 +1,57 @@
+{% include 'components/head.html' %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="card border-0 shadow-sm" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-header bg-danger text-white border-0 py-3 px-4">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Eliminar Recurso</h5>
+        </div>
+        <div class="card-body p-4">
+            <p>¿Est&aacute;s seguro de que deseas eliminar el recurso <strong>{{ recurso.nombre }}</strong>?</p>
+            {% if pendientes %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-clock me-2"></i>
+                    Este recurso tiene <strong>{{ pendientes }} asignaci&oacute;n(es) pendiente(s)</strong> (no devueltas).
+                </div>
+            {% elif total_asignaciones > 0 %}
+                <div class="alert alert-info">
+                    <i class="fas fa-archive me-2"></i>
+                    El recurso tiene {{ total_asignaciones }} asignaciones en el historial (ya devueltas).
+                </div>
+            {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    El recurso no tiene asignaciones. Puedes eliminarlo sin problemas.
+                </div>
+            {% endif %}
+
+            <form novalidate method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ url_for('inventario.dashboard') }}" class="btn btn-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-danger shadow-sm fw-bold px-4">
+                        <i class="fas fa-trash me-1"></i> Eliminar definitivamente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector('form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const nombre = {{ recurso.nombre|tojson }};
+    const result = await Swal.fire({
+        title: '¿Eliminar recurso?',
+        text: `Eliminar "${nombre}" definitivamente. Esta acci&oacute;n no se puede deshacer.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+    if (result.isConfirmed) HTMLFormElement.prototype.submit.call(this);
+});
+</script>
+
+{% include 'components/footer.html' %}

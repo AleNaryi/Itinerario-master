@@ -1,0 +1,142 @@
+{% include 'components/head.html' %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <h1 class="h3 fw-bold mb-0">
+            <i class="fas fa-broadcast-tower me-2 text-danger"></i>Guión en Vivo
+        </h1>
+    </div>
+
+    {% set total = guiones|length %}
+    {% set en_vivo_count = guiones|selectattr('estado', 'equalto', 'en_vivo')|list|length %}
+    {% set disponibles = guiones|selectattr('estado', 'equalto', 'publicado')|list|length %}
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <i class="fas fa-video text-primary fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Total</div>
+                        <div class="h3 fw-bold mb-0">{{ total }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <i class="fas fa-play-circle text-danger fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">En Vivo</div>
+                        <div class="h3 fw-bold mb-0">{{ en_vivo_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                        <i class="fas fa-check-circle text-success fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Disponibles</div>
+                        <div class="h3 fw-bold mb-0">{{ disponibles }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Guiones -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+            <h5 class="fw-bold mb-0"><i class="fas fa-list me-2 text-primary"></i>Guiones Disponibles</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if guiones %}
+            {% for guion in guiones %}
+            <div class="px-4 py-3 {% if not loop.last %}border-bottom{% endif %} hover-bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="fw-bold fs-5">{{ guion.nombre }}</span>
+                            {% if guion.estado == 'en_vivo' %}
+                            <span class="badge rounded-pill px-3 py-1 bg-danger live-pulse">● EN VIVO</span>
+                            {% elif guion.estado == 'finalizado' %}
+                            <span class="badge rounded-pill px-3 py-1 bg-secondary">Finalizado</span>
+                            {% else %}
+                            <span class="badge rounded-pill px-3 py-1 bg-primary">Publicado</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for f in guion.fechas %}
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill me-1">
+                                <i class="fas fa-calendar-alt me-1"></i>{{ f.fecha.strftime('%d/%m/%Y') }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-auto d-flex gap-2 mt-2 mt-md-0">
+                        <a href="{{ url_for('en_vivo.ver_log', guion_id=guion.id) }}" class="btn btn-sm btn-outline-info" title="Ver log">
+                            <i class="fas fa-history"></i>
+                        </a>
+                        {% if guion.estado == 'en_vivo' %}
+                        <a href="{{ url_for('en_vivo.ver', guion_id=guion.id) }}" class="btn btn-danger btn-sm shadow-sm">
+                            <i class="fas fa-play-circle me-1"></i> Ver en Vivo
+                        </a>
+                        <a href="{{ url_for('en_vivo.finalizar', guion_id=guion.id) }}" class="btn btn-outline-secondary btn-sm" onclick="return confirm('¿Finalizar este guion?')">
+                            <i class="fas fa-stop-circle me-1"></i> Finalizar
+                        </a>
+                        {% elif guion.estado == 'publicado' %}
+                            {% if hay_en_vivo %}
+                            <button class="btn btn-secondary btn-sm" disabled title="Ya hay un guion en vivo">
+                                <i class="fas fa-play me-1"></i> Iniciar
+                            </button>
+                            <small class="text-muted align-self-center d-none d-sm-inline">(otro guion está en vivo)</small>
+                            {% else %}
+                            <a href="{{ url_for('en_vivo.iniciar', guion_id=guion.id) }}" class="btn btn-primary btn-sm shadow-sm">
+                                <i class="fas fa-play me-1"></i> Iniciar Guión
+                            </a>
+                            {% endif %}
+                        {% elif guion.estado == 'finalizado' %}
+                        <a href="{{ url_for('en_vivo.iniciar', guion_id=guion.id) }}" class="btn btn-warning btn-sm shadow-sm">
+                            <i class="fas fa-redo me-1"></i> Reiniciar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                <p class="mb-0">No hay guiones publicados.</p>
+                <p>Ve a <a href="{{ url_for('guion.dashboard') }}">Gestión de Guiones</a> y publica uno.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.live-pulse {
+    animation: livePulse 1.5s infinite;
+}
+@keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+.hover-bg-light:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+</style>
+
+<script type="module" src="{{ url_for('static', filename='js/GestionEnVivo.js') }}"></script>
+
+{% include 'components/footer.html' %}

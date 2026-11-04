@@ -1,0 +1,360 @@
+{% include 'components/head.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+<div class="dash-wrap">
+
+  <div class="dash-header">
+    <h1><i class="fas fa-crown me-2 hi-amber"></i>Dashboard</h1>
+    <p>Panel de control del sistema</p>
+    <div class="accent-line"></div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card kpi-green">
+      <div class="kpi-icon"><i class="fas fa-broadcast-tower"></i></div>
+      <div class="kpi-label">En Vivo</div>
+      <div class="kpi-value">
+        {% if live.activo %}
+        <span class="live-pulse"></span>{{ live.nombre[:18] }}
+        {% else %}
+        <span class="live-off"></span>Sin actividad
+        {% endif %}
+      </div>
+      <div class="kpi-sub">
+        {% if live.activo %}{{ live.completados }}/{{ live.total }} elementos{% else %}—{% endif %}
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-icon"><i class="fas fa-users"></i></div>
+      <div class="kpi-label">En Línea</div>
+      <div class="kpi-value"><span class="online-count-badge">{{ usuarios_en_linea }}</span></div>
+      <div class="kpi-sub">usuarios conectados ahora</div>
+    </div>
+
+    {% if 'tarea' in modulos_visibles %}
+    <a href="{{ url_for('gestion_tarea.tareas_usuario') }}" class="kpi-card kpi-amber">
+      <div class="kpi-icon"><i class="fas fa-tasks"></i></div>
+      <div class="kpi-label">Mis Tareas Pendientes</div>
+      <div class="kpi-value">{{ metricas.tarea.pendientes }}</div>
+      <div class="kpi-sub">{{ metricas.tarea.completadas }} completadas</div>
+    </a>
+    {% endif %}
+
+    {% if 'mantenimiento' in modulos_visibles %}
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-icon"><i class="fas fa-tools"></i></div>
+      <div class="kpi-label">Mantenimiento</div>
+      <div class="kpi-value">{{ metricas.mantenimiento.en_mantenimiento }}</div>
+      <div class="kpi-sub">{{ metricas.mantenimiento.disponible }} disponibles</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="production-panel">
+    <div class="panel-header">
+      <h5><i class="fas fa-film me-2 hi-blue"></i>Panel de Producción</h5>
+    </div>
+    <div class="panel-body">
+      {% if live.activo %}
+      <div class="prod-live-row">
+        <span class="prod-live-badge"><span class="live-pulse"></span>Transmitiendo ahora</span>
+        <a href="{{ url_for('en_vivo.ver', guion_id=live.id) }}" class="btn btn-sm dash-btn">
+          <i class="fas fa-external-link-alt me-1"></i>Ir a En Vivo
+        </a>
+      </div>
+      <div class="prod-title">{{ live.nombre }}</div>
+      <div class="prod-meta">{{ live.completados }} de {{ live.total }} elementos completados</div>
+
+      <div class="prod-progress">
+        {% set pct = (live.completados / live.total * 100) if live.total > 0 else 0 %}
+        <div class="prod-progress-fill" style="width:{{ pct }}%"></div>
+      </div>
+
+      {% if live.elemento_actual %}
+      <div class="prod-current">
+        <div class="now-playing"><i class="fas fa-play"></i></div>
+        <div class="prod-current-text">
+          <strong>{{ live.elemento_actual.contenido or 'Elemento en curso' }}</strong>
+          <span>
+            {% if live.elemento_actual.hora %}{{ live.elemento_actual.hora.strftime('%H:%M') if live.elemento_actual.hora is string else live.elemento_actual.hora }}{% endif %}
+            {% if live.elemento_actual.encargado %} · {{ live.elemento_actual.encargado }}{% endif %}
+          </span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if live.siguientes %}
+      <div class="prod-next">
+        {% for e in live.siguientes %}
+        <div class="prod-next-item">
+          <span class="next-num">{{ loop.index }}</span>
+          <span>{{ e.contenido[:30] }}{{ '…' if e.contenido and e.contenido|length > 30 }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="prod-meta">
+        <a href="{{ url_for('guion.dashboard') }}" class="prod-meta-link">
+          <i class="fas fa-arrow-right me-1"></i>Gestionar guiones
+        </a>
+      </div>
+      {% else %}
+      <div class="prod-idle">
+        <div class="prod-idle-icon"><i class="fas fa-pause-circle"></i></div>
+        <h5>Sin producción activa</h5>
+        <p>No hay ningún guión transmitiéndose en este momento.</p>
+        <a href="{{ url_for('guion.dashboard') }}" class="btn btn-sm dash-btn">
+          <i class="fas fa-plus me-1"></i>Ir a Guiones
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="modulos-grid">
+    {% if 'guion' in modulos_visibles %}
+    <a href="{{ url_for('guion.dashboard') }}" class="modulo-card mod-blue">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-scroll"></i></div>
+        <div class="mod-name">Guión</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.guion.borrador }}</div><div class="mod-stat-lbl">Borrador</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.guion.publicado }}</div><div class="mod-stat-lbl">Publicado</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.guion.en_vivo }}</div><div class="mod-stat-lbl">En Vivo</div></div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'mantenimiento' in modulos_visibles %}
+    <a href="{{ url_for('mantenimiento.dashboard') }}" class="modulo-card mod-amber">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-tools"></i></div>
+        <div class="mod-name">Mantenimiento</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.mantenimiento.en_mantenimiento }}</div><div class="mod-stat-lbl">En manto.</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.mantenimiento.disponible }}</div><div class="mod-stat-lbl">Disponible</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.mantenimiento.baja }}</div><div class="mod-stat-lbl">Baja</div></div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'premio' in modulos_visibles %}
+    <a href="{{ url_for('premio.dashboard') }}" class="modulo-card mod-purple">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-gift"></i></div>
+        <div class="mod-name">Premios</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.premio.pendiente }}</div><div class="mod-stat-lbl">Pendiente</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.premio.entregado }}</div><div class="mod-stat-lbl">Entregado</div></div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'contrato' in modulos_visibles %}
+    <a href="{{ url_for('contrato.dashboard') }}" class="modulo-card mod-cyan">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-file-contract"></i></div>
+        <div class="mod-name">Contratos</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.contrato.vigentes }}</div><div class="mod-stat-lbl">Vigente</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.contrato.borrador }}</div><div class="mod-stat-lbl">Borrador</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.contrato.total }}</div><div class="mod-stat-lbl">Total</div></div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'balance' in modulos_visibles %}
+    <a href="{{ url_for('balance.dashboard') }}" class="modulo-card mod-green">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-balance-scale"></i></div>
+        <div class="mod-name">Balance</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat mod-stat--wide">
+          <div class="mod-stat-val">${{ "{:,.0f}".format(metricas.balance.total_pagado) }}</div>
+          <div class="mod-stat-lbl">Total pagado</div>
+        </div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'tarea' in modulos_visibles %}
+    <a href="{{ url_for('gestion_tarea.tareas_usuario') }}" class="modulo-card mod-orange">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-tasks"></i></div>
+        <div class="mod-name">Mis Tareas</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.tarea.pendientes }}</div><div class="mod-stat-lbl">Pendiente</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.tarea.completadas }}</div><div class="mod-stat-lbl">Completada</div></div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'patrocinador' in modulos_visibles %}
+    <a href="{{ url_for('patrocinador.dashboard') }}" class="modulo-card mod-pink">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-handshake"></i></div>
+        <div class="mod-name">Patrocinantes</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat mod-stat--wide">
+          <div class="mod-stat-val">{{ metricas.patrocinador.activos }}</div>
+          <div class="mod-stat-lbl">Activos</div>
+        </div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'usuario' in modulos_visibles %}
+    <a href="{{ url_for('usuario.dashboard') }}" class="modulo-card mod-indigo">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-users"></i></div>
+        <div class="mod-name">Usuarios</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.usuario.total }}</div><div class="mod-stat-lbl">Registrados</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ usuarios_en_linea }}</div><div class="mod-stat-lbl">En línea</div></div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'inventario' in modulos_visibles %}
+    <a href="{{ url_for('inventario.dashboard') }}" class="modulo-card mod-sky">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-boxes"></i></div>
+        <div class="mod-name">Inventario</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.inventario.total }}</div><div class="mod-stat-lbl">Total</div></div>
+        <div class="mod-stat"><div class="mod-stat-val">{{ metricas.inventario.disponibles }}</div><div class="mod-stat-lbl">Disponible</div></div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'reels' in modulos_visibles %}
+    <a href="{{ url_for('reels.dashboard') }}" class="modulo-card mod-fuchsia">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-video"></i></div>
+        <div class="mod-name">Reels</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat mod-stat--wide">
+          <div class="mod-stat-val">{{ metricas.reels.total }}</div>
+          <div class="mod-stat-lbl">Total</div>
+        </div>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if 'rol' in modulos_visibles %}
+    <a href="{{ url_for('rol.dashboard') }}" class="modulo-card mod-slate">
+      <div class="mod-top">
+        <div class="mod-icon"><i class="fas fa-user-shield"></i></div>
+        <div class="mod-name">Roles</div>
+      </div>
+      <div class="mod-stats">
+        <div class="mod-stat mod-stat--wide">
+          <div class="mod-stat-val">{{ metricas.rol.roles }}</div>
+          <div class="mod-stat-lbl">Roles</div>
+        </div>
+      </div>
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="bottom-row">
+    {% if 'actividad' in modulos_visibles %}
+    <div class="activity-card">
+      <div class="card-header">
+        <h6><i class="fas fa-history me-2 hi-blue"></i>Actividad Reciente</h6>
+        <a href="{{ url_for('bitacora.dashboard') }}">Ver todas →</a>
+      </div>
+      {% if actividad %}
+      <ul class="activity-list" id="activity-list">
+        {% for act in actividad %}
+        <li class="activity-item{% if loop.index > 5 %} activity-hidden{% endif %}">
+          <div class="activity-dot {% if act.tipo_accion == 'create' %}act-dot-create{% elif act.tipo_accion == 'update' %}act-dot-update{% elif act.tipo_accion == 'delete' %}act-dot-delete{% elif act.tipo_accion == 'login' %}act-dot-login{% else %}act-dot-otro{% endif %}">
+            <i class="fas {% if act.tipo_accion == 'create' %}fa-plus{% elif act.tipo_accion == 'update' %}fa-pen{% elif act.tipo_accion == 'delete' %}fa-trash{% elif act.tipo_accion == 'login' %}fa-sign-in-alt{% else %}fa-circle{% endif %}"></i>
+          </div>
+          <div class="activity-body">
+            <div class="act-user">{{ act.usuario.nombre if act.usuario else 'Desconocido' }}</div>
+            <div class="act-action">
+              {% if act.accion %}{{ act.accion }}{% else %}{{ act.tipo_accion }}{% endif %}
+              <span class="badge act-modulo-badge">{{ act.modulo }}</span>
+            </div>
+            <div class="act-time">{{ act.created_at.strftime('%d/%m %H:%M') if act.created_at else '' }}</div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if actividad|length > 5 %}
+      <div class="activity-toggle">
+        <button onclick="toggleActividad()" id="btn-toggle-actividad" class="btn-toggle-more">
+          <i class="fas fa-chevron-down"></i> Ver más ({{ actividad|length - 5 }})
+        </button>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="activity-empty">
+        <i class="fas fa-inbox"></i>
+        <p>Sin actividad registrada</p>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if 'enlinea' in modulos_visibles %}
+    <div class="online-card">
+      <div class="card-header">
+        <h6><i class="fas fa-user-friends me-2 hi-green"></i>En Línea</h6>
+        <span class="online-count-badge online-count-sub">{{ usuarios_en_linea }}</span>
+      </div>
+      {% if usuarios_info %}
+      <ul class="online-list online-scroll" id="user-list">
+        {% for u in usuarios_info %}
+        <li class="online-item">
+          <div class="online-avatar">{{ u.nombre[:2] }}</div>
+          <div class="online-info">
+            <div class="on-name">{{ u.nombre }}</div>
+            <div class="on-module">{{ u.modulo }}</div>
+          </div>
+          <span class="online-status {% if u.en_vivo %}vivo{% else %}active{% endif %}"></span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="online-empty">
+        <i class="fas fa-user-slash"></i>
+        <p>Sin usuarios conectados</p>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function toggleActividad() {
+  var list = document.getElementById('activity-list');
+  var btn = document.getElementById('btn-toggle-actividad');
+  list.classList.toggle('activity-expanded');
+  if (list.classList.contains('activity-expanded')) {
+    btn.innerHTML = '<i class="fas fa-chevron-up"></i> Ver menos';
+  } else {
+    btn.innerHTML = '<i class="fas fa-chevron-down"></i> Ver más ({{ actividad|length - 5 if actividad|length > 5 else 0 }})';
+  }
+}
+</script>
+
+{% include 'components/footer.html' %}
