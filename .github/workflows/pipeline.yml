@@ -1,5 +1,4 @@
-
-name: Pipeline de pruebas - Inventario
+name: Pipeline de pruebas - Reels
 
 on:
   push:
@@ -11,26 +10,6 @@ jobs:
   pruebas:
     runs-on: ubuntu-latest
 
-    # Configuración de conexión que utilizará conftest.py
-    env:
-      DB_HOST: 127.0.0.1
-      DB_USER: root
-      DB_PASSWORD: root1234
-
-    # Iniciar MySQL dentro de GitHub Actions
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root1234
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot1234"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
     steps:
       - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
@@ -39,14 +18,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
-      - name: Instalar dependencias del proyecto
+      - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Ejecutar pruebas automatizadas del inventario
+      - name: Ejecutar pruebas de Reels
         run: |
-          python -m pytest -v tests/test_inventario.py
+          python -m pytest -v tests/test_reel_model.py
