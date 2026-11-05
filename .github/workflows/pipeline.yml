@@ -1,3 +1,4 @@
+
 name: Pipeline de pruebas - Inventario
 
 on:
@@ -9,6 +10,26 @@ on:
 jobs:
   pruebas:
     runs-on: ubuntu-latest
+
+    # Configuración de conexión que utilizará conftest.py
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USER: root
+      DB_PASSWORD: root1234
+
+    # Iniciar MySQL dentro de GitHub Actions
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root1234
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot1234"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - name: Descargar codigo del repositorio
